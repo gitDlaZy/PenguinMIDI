@@ -17,7 +17,7 @@ juce_add_plugin(PenguinLFO
     COPY_PLUGIN_AFTER_BUILD FALSE
     PLUGIN_MANUFACTURER_CODE Dlzy
     PLUGIN_CODE Plfo
-    FORMATS VST
+    FORMATS VST VST3
     PRODUCT_NAME "PenguinLFO"
     VST2_CATEGORY kPlugCategEffect
 )
@@ -30,6 +30,7 @@ target_sources(PenguinLFO PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/WaveformVisualizer.cpp
+    Source/CustomWaveformEditor.cpp
 )
 
 target_compile_definitions(PenguinLFO PUBLIC
@@ -52,5 +53,8 @@ target_link_libraries(PenguinLFO PRIVATE
     juce::juce_recommended_warning_flags
 )
 
-enable_testing()
-add_subdirectory(tests)
+option(PENGUIN_BUILD_TESTS "Build unit tests (requires git on Windows)" OFF)
+if(PENGUIN_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
