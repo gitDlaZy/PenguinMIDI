@@ -2,65 +2,239 @@
   "presets": [
     {
       "name": "Slow Breathe",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
       "lfos": [
-        {"shape":"Sine",   "rate":"1/1",  "target":"Volume","depth":0.7, "enabled":true},
-        {"shape":"Sine",   "rate":"1/2d", "target":"Filter","depth":0.4, "enabled":true},
-        {"shape":"Sine",   "rate":"2/1",  "target":"Pan",   "depth":0.2, "enabled":true},
-        {"shape":"Sine",   "rate":"1/1",  "target":"Volume","depth":0.0, "enabled":false}
+        {"shape":"Sine",   "rate":"1/1",  "target":"Volume","depth":0.7, "enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",   "rate":"1/2d", "target":"Filter","depth":0.4, "enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",   "rate":"2/1",  "target":"Pan",   "depth":0.2, "enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",   "rate":"1/1",  "target":"Volume","depth":0.0, "enabled":false,"smoothing":0.0,"pitchCenter":0.0}
       ]
     },
     {
       "name": "Hard Gate",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
       "lfos": [
-        {"shape":"Square", "rate":"1/8",  "target":"Volume","depth":0.95,"enabled":true},
-        {"shape":"Square", "rate":"1/16", "target":"Volume","depth":0.3, "enabled":true},
-        {"shape":"Sine",   "rate":"1/4",  "target":"Filter","depth":0.2, "enabled":false},
-        {"shape":"Sine",   "rate":"1/4",  "target":"Volume","depth":0.0, "enabled":false}
+        {"shape":"Square", "rate":"1/8",  "target":"Volume","depth":0.95,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Square", "rate":"1/16", "target":"Volume","depth":0.3, "enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",   "rate":"1/4",  "target":"Filter","depth":0.2, "enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",   "rate":"1/4",  "target":"Volume","depth":0.0, "enabled":false,"smoothing":0.0,"pitchCenter":0.0}
       ]
     },
     {
       "name": "Stutter 16ths",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
       "lfos": [
-        {"shape":"Square",        "rate":"1/16",  "target":"Volume","depth":0.9,"enabled":true},
-        {"shape":"Sine",          "rate":"1/16t", "target":"Filter","depth":0.6,"enabled":true},
-        {"shape":"SampleAndHold", "rate":"1/8",   "target":"Pan",   "depth":0.4,"enabled":true},
-        {"shape":"Sine",          "rate":"1/4",   "target":"Volume","depth":0.0,"enabled":false}
+        {"shape":"Square",        "rate":"1/16",  "target":"Volume","depth":0.9,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",          "rate":"1/16t", "target":"Filter","depth":0.6,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"SampleAndHold", "rate":"1/8",   "target":"Pan",   "depth":0.4,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",          "rate":"1/4",   "target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
       ]
     },
     {
       "name": "Polyrhythm",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
       "lfos": [
-        {"shape":"Square", "rate":"1/4",   "target":"Volume","depth":0.8,"enabled":true},
-        {"shape":"Sine",   "rate":"1/8t",  "target":"Filter","depth":0.5,"enabled":true},
-        {"shape":"Square", "rate":"3/16",  "target":"Volume","depth":0.5,"enabled":true},
-        {"shape":"Sine",   "rate":"1/16d", "target":"Pan",   "depth":0.3,"enabled":true}
+        {"shape":"Square", "rate":"1/4",   "target":"Volume","depth":0.8,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",   "rate":"1/8t",  "target":"Filter","depth":0.5,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Square", "rate":"3/16",  "target":"Volume","depth":0.5,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",   "rate":"1/16d", "target":"Pan",   "depth":0.3,"enabled":true, "smoothing":0.0,"pitchCenter":0.0}
       ]
     },
     {
       "name": "Pan Drift",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
       "lfos": [
-        {"shape":"Sine",     "rate":"2/1", "target":"Pan",   "depth":0.8,"enabled":true},
-        {"shape":"Sine",     "rate":"1/1", "target":"Volume","depth":0.4,"enabled":true},
-        {"shape":"Triangle", "rate":"1/2", "target":"Filter","depth":0.2,"enabled":true},
-        {"shape":"Sine",     "rate":"1/4", "target":"Volume","depth":0.0,"enabled":false}
+        {"shape":"Sine",     "rate":"2/1", "target":"Pan",   "depth":0.8,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",     "rate":"1/1", "target":"Volume","depth":0.4,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Triangle", "rate":"1/2", "target":"Filter","depth":0.2,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",     "rate":"1/4", "target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
       ]
     },
     {
       "name": "Glitch",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
       "lfos": [
-        {"shape":"SampleAndHold","rate":"1/16","target":"Volume","depth":0.9,"enabled":true},
-        {"shape":"SampleAndHold","rate":"3/16","target":"Filter","depth":0.7,"enabled":true},
-        {"shape":"Square",       "rate":"7/16","target":"Pan",   "depth":0.5,"enabled":true},
-        {"shape":"SampleAndHold","rate":"5/16","target":"Volume","depth":0.4,"enabled":true}
+        {"shape":"SampleAndHold","rate":"1/16","target":"Volume","depth":0.9,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"SampleAndHold","rate":"3/16","target":"Filter","depth":0.7,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Square",       "rate":"7/16","target":"Pan",   "depth":0.5,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"SampleAndHold","rate":"5/16","target":"Volume","depth":0.4,"enabled":true, "smoothing":0.0,"pitchCenter":0.0}
       ]
     },
     {
       "name": "Half Time Feel",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
       "lfos": [
-        {"shape":"Square",   "rate":"1/2",  "target":"Volume","depth":0.85,"enabled":true},
-        {"shape":"Sine",     "rate":"1/4t", "target":"Pitch", "depth":0.2, "enabled":true},
-        {"shape":"Sine",     "rate":"1/1",  "target":"Filter","depth":0.3, "enabled":true},
-        {"shape":"Triangle", "rate":"7/8",  "target":"Pan",   "depth":0.15,"enabled":false}
+        {"shape":"Square",   "rate":"1/2",  "target":"Volume","depth":0.85,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",     "rate":"1/4t", "target":"Pitch", "depth":0.2, "enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",     "rate":"1/1",  "target":"Filter","depth":0.3, "enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Triangle", "rate":"7/8",  "target":"Pan",   "depth":0.15,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Soft Saw Up",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
+      "lfos": [
+        {"shape":"SawUp","rate":"1/4","target":"Volume","depth":0.8,"enabled":true, "smoothing":0.15,"pitchCenter":0.0},
+        {"shape":"Sine", "rate":"1/2","target":"Filter","depth":0.3,"enabled":true, "smoothing":0.0, "pitchCenter":0.0},
+        {"shape":"Sine", "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0, "pitchCenter":0.0},
+        {"shape":"Sine", "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0, "pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Soft Saw Down",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
+      "lfos": [
+        {"shape":"SawDown","rate":"1/4","target":"Volume","depth":0.8,"enabled":true, "smoothing":0.15,"pitchCenter":0.0},
+        {"shape":"Sine",   "rate":"1/2","target":"Pan",  "depth":0.3,"enabled":true, "smoothing":0.0, "pitchCenter":0.0},
+        {"shape":"Sine",   "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",   "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Soft Gate",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
+      "lfos": [
+        {"shape":"Square","rate":"1/8","target":"Volume","depth":0.9,"enabled":true, "smoothing":0.2,"pitchCenter":0.0},
+        {"shape":"Sine",  "rate":"1/4","target":"Filter","depth":0.3,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",  "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine",  "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Filter Sweep Narrow",
+      "filterLowCut": 500.0, "filterHighCut": 4000.0,
+      "lfos": [
+        {"shape":"Sine","rate":"1/2","target":"Filter","depth":0.8,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Filter Sweep Wide",
+      "filterLowCut": 80.0, "filterHighCut": 16000.0,
+      "lfos": [
+        {"shape":"SawUp","rate":"2/1","target":"Filter","depth":1.0,"enabled":true, "smoothing":0.1,"pitchCenter":0.0},
+        {"shape":"Sine", "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine", "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine", "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Pitch Up Only",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
+      "lfos": [
+        {"shape":"Sine","rate":"1/4","target":"Pitch","depth":0.4,"enabled":true, "smoothing":0.0,"pitchCenter":1.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Pitch Down Only",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
+      "lfos": [
+        {"shape":"Sine","rate":"1/4","target":"Pitch","depth":0.4,"enabled":true, "smoothing":0.0,"pitchCenter":-1.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Pitch Vibrato",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
+      "lfos": [
+        {"shape":"Sine","rate":"1/4t","target":"Pitch", "depth":0.25,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4", "target":"Volume","depth":0.2, "enabled":true, "smoothing":0.05,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4", "target":"Volume","depth":0.0, "enabled":false,"smoothing":0.0, "pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4", "target":"Volume","depth":0.0, "enabled":false,"smoothing":0.0, "pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Filter + Tremolo",
+      "filterLowCut": 200.0, "filterHighCut": 8000.0,
+      "lfos": [
+        {"shape":"Sine",    "rate":"1/4","target":"Volume","depth":0.6,"enabled":true, "smoothing":0.05,"pitchCenter":0.0},
+        {"shape":"Triangle","rate":"1/2","target":"Filter","depth":0.7,"enabled":true, "smoothing":0.0, "pitchCenter":0.0},
+        {"shape":"Sine",    "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0, "pitchCenter":0.0},
+        {"shape":"Sine",    "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0, "pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Triplet Filter Sweep",
+      "filterLowCut": 300.0, "filterHighCut": 12000.0,
+      "lfos": [
+        {"shape":"SawUp","rate":"1/4t","target":"Filter","depth":0.9,"enabled":true, "smoothing":0.08,"pitchCenter":0.0},
+        {"shape":"Square","rate":"1/8","target":"Volume","depth":0.5,"enabled":true, "smoothing":0.15,"pitchCenter":0.0},
+        {"shape":"Sine",  "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0, "pitchCenter":0.0},
+        {"shape":"Sine",  "rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0, "pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Deep Pan + Pitch",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
+      "lfos": [
+        {"shape":"Sine","rate":"2/1","target":"Pan",  "depth":1.0,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/2","target":"Pitch","depth":0.3,"enabled":true, "smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Odd Groove",
+      "filterLowCut": 100.0, "filterHighCut": 10000.0,
+      "lfos": [
+        {"shape":"Square",  "rate":"7/16","target":"Volume","depth":0.85,"enabled":true, "smoothing":0.12,"pitchCenter":0.0},
+        {"shape":"Triangle","rate":"5/16","target":"Filter","depth":0.6, "enabled":true, "smoothing":0.0, "pitchCenter":0.0},
+        {"shape":"Sine",    "rate":"3/16","target":"Pan",   "depth":0.4, "enabled":true, "smoothing":0.0, "pitchCenter":0.0},
+        {"shape":"Sine",    "rate":"1/4", "target":"Volume","depth":0.0, "enabled":false,"smoothing":0.0, "pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Gentle Combo",
+      "filterLowCut": 60.0, "filterHighCut": 14000.0,
+      "lfos": [
+        {"shape":"Sine","rate":"1/1",  "target":"Volume","depth":0.4, "enabled":true,"smoothing":0.05,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"2/1",  "target":"Filter","depth":0.3, "enabled":true,"smoothing":0.0, "pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/2",  "target":"Pan",   "depth":0.25,"enabled":true,"smoothing":0.0, "pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4t", "target":"Pitch", "depth":0.15,"enabled":true,"smoothing":0.0, "pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Custom Heartbeat",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
+      "lfos": [
+        {
+          "shape":"Custom","rate":"1/2","target":"Volume","depth":0.9,"enabled":true,"smoothing":0.05,"pitchCenter":0.0,
+          "customWave":{
+            "isStepMode":false,"stepCount":16,"steps":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            "nodes":[
+              {"x":0.0,"y":0.0},{"x":0.1,"y":1.0},{"x":0.2,"y":-0.3},
+              {"x":0.3,"y":0.8},{"x":0.45,"y":-1.0},{"x":0.5,"y":-1.0},
+              {"x":0.7,"y":-0.1},{"x":1.0,"y":0.0}
+            ]
+          }
+        },
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
+      ]
+    },
+    {
+      "name": "Step Stutter",
+      "filterLowCut": 20.0, "filterHighCut": 20000.0,
+      "lfos": [
+        {
+          "shape":"Custom","rate":"1/4","target":"Volume","depth":1.0,"enabled":true,"smoothing":0.0,"pitchCenter":0.0,
+          "customWave":{
+            "isStepMode":true,"stepCount":16,
+            "steps":[1.0,0.0,1.0,1.0,-1.0,0.0,1.0,0.0,0.0,1.0,-1.0,1.0,0.0,0.0,1.0,-1.0],
+            "nodes":[]
+          }
+        },
+        {"shape":"SampleAndHold","rate":"1/16","target":"Pan","depth":0.5,"enabled":true,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0},
+        {"shape":"Sine","rate":"1/4","target":"Volume","depth":0.0,"enabled":false,"smoothing":0.0,"pitchCenter":0.0}
       ]
     }
   ]

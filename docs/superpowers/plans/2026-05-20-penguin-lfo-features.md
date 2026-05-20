@@ -18,17 +18,17 @@
 
 Update this section after each task. Format: `[x] Task N — done` or `[ ] Task N — pending`.
 
-- [ ] Task 1 — Data model: LFOEngine.h
-- [ ] Task 2 — Custom waveform playback + tests
-- [ ] Task 3 — Smoothing ramp + tests
-- [ ] Task 4 — Pitch center + two-filter chain (PluginProcessor)
-- [ ] Task 5 — PresetManager: serialize new fields + update tests
-- [ ] Task 6 — CustomWaveformEditor component (new files + CMakeLists)
-- [ ] Task 7 — LFORow UI: smoothing slider + pitch center slider
-- [ ] Task 8 — LFORow UI: expandable Custom shape panel
-- [ ] Task 9 — Editor UI: filter section at bottom
-- [ ] Task 10 — WaveformVisualizer: custom waveform + pitch center line
-- [ ] Task 11 — Factory presets (15+)
+- [x] Task 1 — Data model: LFOEngine.h
+- [x] Task 2 — Custom waveform playback + tests
+- [x] Task 3 — Smoothing ramp + tests
+- [x] Task 4 — Pitch center + two-filter chain (PluginProcessor)
+- [x] Task 5 — PresetManager: serialize new fields + update tests
+- [x] Task 6 — CustomWaveformEditor component (new files + CMakeLists)
+- [x] Task 7 — LFORow UI: smoothing slider + pitch center slider
+- [x] Task 8 — LFORow UI: expandable Custom shape panel
+- [x] Task 9 — Editor UI: filter section at bottom
+- [x] Task 10 — WaveformVisualizer: custom waveform + pitch center line
+- [x] Task 11 — Factory presets (22 total — 7 original + 15 new)
 
 ---
 
