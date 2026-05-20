@@ -69,3 +69,18 @@ TEST_CASE("1/4t (triplet) is 3/2 the speed of 1/4", "[rates]") {
     float inc4t = lfoPhaseIncrement(LFO_RATE_1_4T, 120.0f, 44100.0f);
     REQUIRE_THAT(inc4t / inc4, WithinRel(1.5f, 0.001f));
 }
+TEST_CASE("8/1 (slowest) is 32x slower than 1/4", "[rates]") {
+    float inc4  = lfoPhaseIncrement(LFO_RATE_1_4, 120.0f, 44100.0f);
+    float inc81 = lfoPhaseIncrement(LFO_RATE_8_1, 120.0f, 44100.0f);
+    REQUIRE_THAT(inc4 / inc81, WithinRel(32.0f, 0.001f));
+}
+TEST_CASE("1/64 (fastest) is 64x faster than 1/4", "[rates]") {
+    float inc4   = lfoPhaseIncrement(LFO_RATE_1_4,  120.0f, 44100.0f);
+    float inc64  = lfoPhaseIncrement(LFO_RATE_1_64, 120.0f, 44100.0f);
+    REQUIRE_THAT(inc64 / inc4, WithinRel(64.0f, 0.001f));
+}
+TEST_CASE("Out-of-range rateIndex falls back to 1/4", "[rates]") {
+    float inc4    = lfoPhaseIncrement(LFO_RATE_1_4, 120.0f, 44100.0f);
+    float incBad  = lfoPhaseIncrement(999,           120.0f, 44100.0f);
+    REQUIRE_THAT(incBad, WithinAbs(inc4, 0.0000001f));
+}

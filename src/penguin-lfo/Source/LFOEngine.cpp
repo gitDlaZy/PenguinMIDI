@@ -44,11 +44,13 @@ const LFORateEntry LFO_RATES[LFO_RATE_COUNT] = {
     {1.5f,     "1/4d"},
     {0.75f,    "1/8d"},
     {0.375f,   "1/16d"},
-    {1.3333f,  "1/2t"},
-    {0.6667f,  "1/4t"},
-    {0.3333f,  "1/8t"},
-    {0.1667f,  "1/16t"},
-    {0.08333f, "1/32t"},
+    // triplet = 2/3 of straight value
+    {4.0f/3.0f, "1/2t"},
+    {2.0f/3.0f, "1/4t"},
+    {1.0f/3.0f, "1/8t"},
+    {1.0f/6.0f, "1/16t"},
+    {1.0f/12.0f,"1/32t"},
+    // odd timings (3/16 == 1/8d in duration — both included as spec'd)
     {0.75f,    "3/16"},
     {1.25f,    "5/16"},
     {1.75f,    "7/16"},
@@ -57,6 +59,7 @@ const LFORateEntry LFO_RATES[LFO_RATE_COUNT] = {
 };
 
 float lfoPhaseIncrement(int rateIndex, float bpm, float sampleRate) {
+    if (rateIndex < 0 || rateIndex >= LFO_RATE_COUNT) rateIndex = LFO_RATE_1_4;
     // cycles/sample = bpm / (60 * sampleRate * beatsPerCycle)
     return bpm / (60.0f * sampleRate * LFO_RATES[rateIndex].beats);
 }

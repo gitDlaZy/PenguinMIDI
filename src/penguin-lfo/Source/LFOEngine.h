@@ -40,7 +40,7 @@ constexpr int LFO_RATE_5_16  = 21;
 constexpr int LFO_RATE_7_16  = 22;
 constexpr int LFO_RATE_5_8   = 23;
 constexpr int LFO_RATE_7_8   = 24;
-constexpr int LFO_RATE_COUNT  = 25;
+constexpr int LFO_RATE_COUNT = 25;
 
 struct LFOInstance {
     LFOShape  shape              = LFOShape::Sine;
