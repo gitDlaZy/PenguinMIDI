@@ -54,3 +54,15 @@ TEST_CASE("Malformed JSON returns empty preset list", "[presets]") {
     REQUIRE(parsePresetsJson("{invalid json}").empty());
     REQUIRE(parsePresetsJson("{\"presets\": null}").empty());
 }
+
+#include <fstream>
+TEST_CASE("All 7 factory presets load from file", "[presets]") {
+    std::ifstream f("../Presets/presets.json");
+    REQUIRE(f.is_open());
+    std::string content((std::istreambuf_iterator<char>(f)),
+                         std::istreambuf_iterator<char>());
+    auto presets = parsePresetsJson(content);
+    REQUIRE(presets.size() == 7);
+    for (const auto& p : presets)
+        REQUIRE(!p.name.empty());
+}

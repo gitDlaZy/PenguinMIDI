@@ -1,0 +1,67 @@
+{
+  "presets": [
+    {
+      "name": "Slow Breathe",
+      "lfos": [
+        {"shape":"Sine",   "rate":"1/1",  "target":"Volume","depth":0.7, "enabled":true},
+        {"shape":"Sine",   "rate":"1/2d", "target":"Filter","depth":0.4, "enabled":true},
+        {"shape":"Sine",   "rate":"2/1",  "target":"Pan",   "depth":0.2, "enabled":true},
+        {"shape":"Sine",   "rate":"1/1",  "target":"Volume","depth":0.0, "enabled":false}
+      ]
+    },
+    {
+      "name": "Hard Gate",
+      "lfos": [
+        {"shape":"Square", "rate":"1/8",  "target":"Volume","depth":0.95,"enabled":true},
+        {"shape":"Square", "rate":"1/16", "target":"Volume","depth":0.3, "enabled":true},
+        {"shape":"Sine",   "rate":"1/4",  "target":"Filter","depth":0.2, "enabled":false},
+        {"shape":"Sine",   "rate":"1/4",  "target":"Volume","depth":0.0, "enabled":false}
+      ]
+    },
+    {
+      "name": "Stutter 16ths",
+      "lfos": [
+        {"shape":"Square",        "rate":"1/16",  "target":"Volume","depth":0.9,"enabled":true},
+        {"shape":"Sine",          "rate":"1/16t", "target":"Filter","depth":0.6,"enabled":true},
+        {"shape":"SampleAndHold", "rate":"1/8",   "target":"Pan",   "depth":0.4,"enabled":true},
+        {"shape":"Sine",          "rate":"1/4",   "target":"Volume","depth":0.0,"enabled":false}
+      ]
+    },
+    {
+      "name": "Polyrhythm",
+      "lfos": [
+        {"shape":"Square", "rate":"1/4",   "target":"Volume","depth":0.8,"enabled":true},
+        {"shape":"Sine",   "rate":"1/8t",  "target":"Filter","depth":0.5,"enabled":true},
+        {"shape":"Square", "rate":"3/16",  "target":"Volume","depth":0.5,"enabled":true},
+        {"shape":"Sine",   "rate":"1/16d", "target":"Pan",   "depth":0.3,"enabled":true}
+      ]
+    },
+    {
+      "name": "Pan Drift",
+      "lfos": [
+        {"shape":"Sine",     "rate":"2/1", "target":"Pan",   "depth":0.8,"enabled":true},
+        {"shape":"Sine",     "rate":"1/1", "target":"Volume","depth":0.4,"enabled":true},
+        {"shape":"Triangle", "rate":"1/2", "target":"Filter","depth":0.2,"enabled":true},
+        {"shape":"Sine",     "rate":"1/4", "target":"Volume","depth":0.0,"enabled":false}
+      ]
+    },
+    {
+      "name": "Glitch",
+      "lfos": [
+        {"shape":"SampleAndHold","rate":"1/16","target":"Volume","depth":0.9,"enabled":true},
+        {"shape":"SampleAndHold","rate":"3/16","target":"Filter","depth":0.7,"enabled":true},
+        {"shape":"Square",       "rate":"7/16","target":"Pan",   "depth":0.5,"enabled":true},
+        {"shape":"SampleAndHold","rate":"5/16","target":"Volume","depth":0.4,"enabled":true}
+      ]
+    },
+    {
+      "name": "Half Time Feel",
+      "lfos": [
+        {"shape":"Square",   "rate":"1/2",  "target":"Volume","depth":0.85,"enabled":true},
+        {"shape":"Sine",     "rate":"1/4t", "target":"Pitch", "depth":0.2, "enabled":true},
+        {"shape":"Sine",     "rate":"1/1",  "target":"Filter","depth":0.3, "enabled":true},
+        {"shape":"Triangle", "rate":"7/8",  "target":"Pan",   "depth":0.15,"enabled":false}
+      ]
+    }
+  ]
+}
