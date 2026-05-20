@@ -6,15 +6,14 @@
 #define M_PI 3.14159265358979323846f
 #endif
 
-enum class LFOShape  { Sine, Square, SawUp, SawDown, Triangle, SampleAndHold };
+enum class LFOShape  { Sine, Square, SawUp, SawDown, Triangle, SampleAndHold, Custom };
 enum class LFOTarget { Volume, Filter, Pan, Pitch };
 
 struct LFORateEntry {
-    float       beats; // cycle length in quarter-note beats
+    float       beats;
     const char* name;
 };
 
-// Rate index constants
 constexpr int LFO_RATE_8_1   = 0;
 constexpr int LFO_RATE_4_1   = 1;
 constexpr int LFO_RATE_2_1   = 2;
@@ -42,23 +41,37 @@ constexpr int LFO_RATE_5_8   = 23;
 constexpr int LFO_RATE_7_8   = 24;
 constexpr int LFO_RATE_COUNT = 25;
 
+struct WaveNode { float x; float y; }; // x in [0,1], y in [-1,1]
+
+// Fixed-size (no heap) so LFOInstance stays copyable on the audio thread.
+struct CustomWaveform {
+    bool     isStepMode = false;
+    int      stepCount  = 16;     // 8, 16, or 32
+    float    steps[32]  = {};     // y values in [-1,1]
+    WaveNode nodes[32]  = {};     // sorted by x
+    int      nodeCount  = 0;
+};
+
 struct LFOInstance {
-    LFOShape  shape              = LFOShape::Sine;
-    LFOTarget target             = LFOTarget::Volume;
-    int       rateIndex          = LFO_RATE_1_4;
-    float     depth              = 1.0f;
-    bool      enabled            = true;
-    float     phase              = 0.0f; // [0, 1)
-    float     sampleAndHoldValue = 0.0f;
+    LFOShape       shape              = LFOShape::Sine;
+    LFOTarget      target             = LFOTarget::Volume;
+    int            rateIndex          = LFO_RATE_1_4;
+    float          depth              = 1.0f;
+    bool           enabled            = true;
+    float          phase              = 0.0f;       // [0,1)
+    float          sampleAndHoldValue = 0.0f;
+    float          smoothing          = 0.0f;       // 0–1, maps to 0–20 ms at phase wrap
+    float          pitchCenter        = 0.0f;       // -1–+1, bias for Pitch target
+    CustomWaveform customWave;
 };
 
 // Returns LFO value in [-1, 1] for the given phase [0, 1]
 float lfoValueAtPhase(const LFOInstance& lfo, float phase);
 
-// Advances phase by phaseIncrement, returns new value. Updates S&H on phase wrap.
-float lfoAdvance(LFOInstance& lfo, float phaseIncrement);
+// Advances phase, applies smoothing ramp, returns value in [-1,1].
+// sampleRate needed to convert smoothing (0-1) to a fade duration in samples.
+float lfoAdvance(LFOInstance& lfo, float phaseIncrement, float sampleRate = 44100.0f);
 
 extern const LFORateEntry LFO_RATES[LFO_RATE_COUNT];
 
-// Returns phase-increment-per-sample (phase 0→1 = one cycle)
 float lfoPhaseIncrement(int rateIndex, float bpm, float sampleRate);
