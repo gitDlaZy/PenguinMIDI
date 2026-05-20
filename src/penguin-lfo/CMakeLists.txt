@@ -52,4 +52,5 @@ target_link_libraries(PenguinLFO PRIVATE
     juce::juce_recommended_warning_flags
 )
 
+enable_testing()
 add_subdirectory(tests)

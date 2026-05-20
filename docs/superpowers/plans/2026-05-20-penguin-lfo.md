@@ -6,7 +6,7 @@
 
 **Architecture:** A pure-C++ `LFOEngine` (no JUCE dependency, fully unit-testable) handles all LFO math. A JUCE `AudioProcessor` wraps the engine and applies modulation to audio. A JUCE `Component` provides the UI. Presets are JSON files parsed by a standalone `PresetManager`. Build targets Windows VST2 (.dll) using CMake + MSVC — this cannot be built inside the Linux Docker container.
 
-**Tech Stack:** C++17, JUCE 7, CMake 3.22+, Catch2 v3 (unit tests), Visual Studio Build Tools 2022 (Windows), nlohmann/json (header-only)
+**Tech Stack:** C++17, JUCE 8, CMake 3.22+, Catch2 v3 (unit tests), Visual Studio Build Tools 2022 (Windows), nlohmann/json (header-only)
 
 ---
 
@@ -28,7 +28,7 @@ src/penguin-lfo/
     CMakeLists.txt
     test_lfo_engine.cpp           ← unit tests: shapes, rates
     test_preset_manager.cpp       ← unit tests: parse, round-trip
-  JUCE/                           ← git submodule (JUCE 7.0.9)
+  JUCE/                           ← git submodule (JUCE 8.0.13)
   third_party/
     nlohmann/json.hpp             ← single-header JSON
     VST2_SDK/pluginterfaces/vst2.x/
