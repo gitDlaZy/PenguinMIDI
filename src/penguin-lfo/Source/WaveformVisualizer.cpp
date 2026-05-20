@@ -3,10 +3,13 @@
 WaveformVisualizer::WaveformVisualizer() { startTimerHz(30); }
 
 void WaveformVisualizer::updateLFOs(const std::array<LFOInstance, 4>& lfos,
-                                     float bpm_, float sampleRate_) {
-    lfoCopy = lfos;
-    bpm = bpm_;
-    sampleRate = sampleRate_;
+                                     float bpm_, float sampleRate_,
+                                     float lowCut, float highCut) {
+    lfoCopy       = lfos;
+    bpm           = bpm_;
+    sampleRate    = sampleRate_;
+    filterLowCut  = lowCut;
+    filterHighCut = highCut;
 }
 
 void WaveformVisualizer::paint(juce::Graphics& g) {
@@ -28,7 +31,7 @@ void WaveformVisualizer::paint(juce::Graphics& g) {
             if (!sim[i].enabled || sim[i].target != LFOTarget::Volume) continue;
             float inc = lfoPhaseIncrement(sim[i].rateIndex, bpm, sampleRate);
             for (int s = 0; s < static_cast<int>(samplesPerPoint); ++s)
-                lfoAdvance(sim[i], inc);
+                lfoAdvance(sim[i], inc, sampleRate);
             float val = lfoValueAtPhase(sim[i], sim[i].phase);
             gain *= 1.0f - sim[i].depth * (1.0f - (val * 0.5f + 0.5f));
         }
@@ -37,4 +40,15 @@ void WaveformVisualizer::paint(juce::Graphics& g) {
     }
     g.setColour(juce::Colour(0xff7ec8e3));
     g.strokePath(path, juce::PathStrokeType(1.5f));
+
+    // Pitch center dashed lines
+    for (int i = 0; i < 4; ++i) {
+        if (!lfoCopy[i].enabled || lfoCopy[i].target != LFOTarget::Pitch) continue;
+        float centerNorm = (lfoCopy[i].pitchCenter + 1.0f) * 0.5f;
+        float lineY = (1.0f - centerNorm) * (h - 4) + 2;
+        g.setColour(juce::Colour(0x88ffaa44));
+        const float dashLen = 6.0f, gapLen = 4.0f;
+        for (float x = 0; x < w; x += dashLen + gapLen)
+            g.drawHorizontalLine(static_cast<int>(lineY), x, x + dashLen);
+    }
 }
