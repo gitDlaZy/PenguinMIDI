@@ -3,6 +3,7 @@
 #include "LFOEngine.h"
 #include "PresetManager.h"
 #include <array>
+#include <atomic>
 
 class PenguinLFOProcessor : public juce::AudioProcessor {
 public:
@@ -28,9 +29,10 @@ public:
     void   getStateInformation(juce::MemoryBlock&) override {}
     void   setStateInformation(const void*, int) override {}
 
+    // Called from message thread. Writes to pendingLfos then sets flag read by processBlock.
     void applyPreset(const PresetData& preset);
 
-    // Public so the editor and visualizer can read them
+    // Public so the editor and visualizer can read them (message thread only)
     std::array<LFOInstance, 4> lfos;
     std::vector<PresetData>    factoryPresets;
     std::vector<PresetData>    userPresets;
@@ -38,6 +40,10 @@ public:
     double currentSampleRate = 44100.0;
 
 private:
+    // Pending preset handoff from message thread → audio thread (lock-free)
+    std::array<LFOInstance, 4> pendingLfos;
+    std::atomic<bool>          presetPending { false };
+
     juce::dsp::StateVariableTPTFilter<float> filterLeft, filterRight;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PenguinLFOProcessor)

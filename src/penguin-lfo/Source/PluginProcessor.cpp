@@ -25,12 +25,12 @@ PenguinLFOProcessor::PenguinLFOProcessor()
         applyPreset(factoryPresets[0]);
 }
 
-void PenguinLFOProcessor::prepareToPlay(double sampleRate, int) {
+void PenguinLFOProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
     currentSampleRate = sampleRate;
 
     juce::dsp::ProcessSpec spec;
     spec.sampleRate       = sampleRate;
-    spec.maximumBlockSize = 512;
+    spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
     spec.numChannels      = 1;
 
     filterLeft.prepare(spec);
@@ -42,12 +42,18 @@ void PenguinLFOProcessor::prepareToPlay(double sampleRate, int) {
 }
 
 void PenguinLFOProcessor::applyPreset(const PresetData& preset) {
-    for (int i = 0; i < 4; ++i)
-        lfos[i] = preset.lfos[i];
+    // Write all fields before signalling the audio thread (release ordering)
+    pendingLfos = preset.lfos;
+    presetPending.store(true, std::memory_order_release);
 }
 
 void PenguinLFOProcessor::processBlock(juce::AudioBuffer<float>& buffer,
                                         juce::MidiBuffer&) {
+    // Apply any pending preset at block boundary (acquire ordering)
+    if (presetPending.exchange(false, std::memory_order_acquire)) {
+        lfos = pendingLfos;
+    }
+
     if (auto* ph = getPlayHead())
         if (auto pos = ph->getPosition())
             if (auto bpm = pos->getBpm())
@@ -57,23 +63,30 @@ void PenguinLFOProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     auto* R = buffer.getNumChannels() > 1 ? buffer.getWritePointer(1) : nullptr;
     int   N = buffer.getNumSamples();
 
+    // Hoist per-LFO phase increments (constant across the block)
+    float incs[4] = {};
+    for (int i = 0; i < 4; ++i) {
+        if (lfos[i].enabled)
+            incs[i] = lfoPhaseIncrement(lfos[i].rateIndex,
+                                        currentBPM,
+                                        static_cast<float>(currentSampleRate));
+    }
+
     for (int s = 0; s < N; ++s) {
-        float gainMod     = 1.0f;
-        float panMod      = 0.0f;
+        float gainMod      = 1.0f;
+        float panMod       = 0.0f;
         float filterCutoff = 20000.0f;
 
         for (int i = 0; i < 4; ++i) {
             if (!lfos[i].enabled) continue;
-            float inc = lfoPhaseIncrement(lfos[i].rateIndex,
-                                          currentBPM,
-                                          static_cast<float>(currentSampleRate));
-            float val = lfoAdvance(lfos[i], inc); // [-1, 1]
+            float val = lfoAdvance(lfos[i], incs[i]); // [-1, 1]
 
             switch (lfos[i].target) {
                 case LFOTarget::Volume:
                     gainMod *= 1.0f - lfos[i].depth * (1.0f - (val * 0.5f + 0.5f));
                     break;
                 case LFOTarget::Filter:
+                    // Multiple Filter LFOs: last enabled one wins
                     filterCutoff = 200.0f * std::pow(100.0f,
                         (val * 0.5f + 0.5f) * lfos[i].depth + (1.0f - lfos[i].depth));
                     filterCutoff = juce::jlimit(200.0f, 20000.0f, filterCutoff);
@@ -82,7 +95,12 @@ void PenguinLFOProcessor::processBlock(juce::AudioBuffer<float>& buffer,
                     panMod = juce::jlimit(-1.0f, 1.0f, panMod + val * lfos[i].depth);
                     break;
                 case LFOTarget::Pitch:
-                    gainMod *= 1.0f + val * lfos[i].depth * 0.05f; // subtle ring-mod vibrato
+                    // Implemented as amplitude modulation (ring-mod approximation).
+                    // True pitch shifting requires resampling and is not implemented.
+                    gainMod *= 1.0f + val * lfos[i].depth * 0.05f;
+                    break;
+                default:
+                    jassertfalse;
                     break;
             }
         }
