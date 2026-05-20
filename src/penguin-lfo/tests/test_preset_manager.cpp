@@ -1,8 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
+#include <fstream>
 #include "PresetManager.h"
 
 TEST_CASE("Parse a single preset from JSON", "[presets]") {
-    const char* json = R"({
+    const char* jsonStr = R"({
       "presets": [{
         "name": "Test",
         "lfos": [
@@ -13,7 +14,7 @@ TEST_CASE("Parse a single preset from JSON", "[presets]") {
         ]
       }]
     })";
-    auto presets = parsePresetsJson(json);
+    auto presets = parsePresetsJson(jsonStr);
     REQUIRE(presets.size() == 1);
     REQUIRE(presets[0].name == "Test");
     REQUIRE(presets[0].lfos[0].shape     == LFOShape::Sine);
@@ -55,9 +56,8 @@ TEST_CASE("Malformed JSON returns empty preset list", "[presets]") {
     REQUIRE(parsePresetsJson("{\"presets\": null}").empty());
 }
 
-#include <fstream>
 TEST_CASE("All 7 factory presets load from file", "[presets]") {
-    std::ifstream f("../Presets/presets.json");
+    std::ifstream f("Presets/presets.json");
     REQUIRE(f.is_open());
     std::string content((std::istreambuf_iterator<char>(f)),
                          std::istreambuf_iterator<char>());
@@ -65,4 +65,8 @@ TEST_CASE("All 7 factory presets load from file", "[presets]") {
     REQUIRE(presets.size() == 7);
     for (const auto& p : presets)
         REQUIRE(!p.name.empty());
+    // verify LFO fields actually parsed (not just defaults)
+    REQUIRE(presets[0].lfos[0].enabled   == true);
+    REQUIRE(presets[0].lfos[0].depth     > 0.0f);
+    REQUIRE(presets[0].lfos[0].rateIndex != LFO_RATE_1_4); // Slow Breathe uses 1/1, not default 1/4
 }
