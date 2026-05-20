@@ -44,4 +44,13 @@ TEST_CASE("Serialize and re-parse round-trips correctly", "[presets]") {
     REQUIRE(loaded[0].lfos[0].shape       == LFOShape::Square);
     REQUIRE(loaded[0].lfos[0].rateIndex   == LFO_RATE_1_8T);
     REQUIRE(loaded[0].lfos[0].target      == LFOTarget::Filter);
+    REQUIRE(loaded[0].lfos[1].enabled     == false);
+    REQUIRE(loaded[0].lfos[2].enabled     == false);
+    REQUIRE(loaded[0].lfos[3].enabled     == false);
+}
+
+TEST_CASE("Malformed JSON returns empty preset list", "[presets]") {
+    REQUIRE(parsePresetsJson("").empty());
+    REQUIRE(parsePresetsJson("{invalid json}").empty());
+    REQUIRE(parsePresetsJson("{\"presets\": null}").empty());
 }
