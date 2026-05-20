@@ -172,6 +172,8 @@ PenguinLFOEditor::PenguinLFOEditor(PenguinLFOProcessor& p)
         lfoRows[i].waveEditor.onChange             = [this, i] { updateCustomWaveform(i); };
     }
 
+    setResizable(true, true);
+    setResizeLimits(400, 220, 1200, 900);
     setSize(520, 400);
     updateLFORowHeights();
     startTimerHz(30);
