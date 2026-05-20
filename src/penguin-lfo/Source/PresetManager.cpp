@@ -12,7 +12,8 @@ static LFOShape shapeFromString(const std::string& s) {
     if (s == "SawDown")       return LFOShape::SawDown;
     if (s == "Triangle")      return LFOShape::Triangle;
     if (s == "SampleAndHold") return LFOShape::SampleAndHold;
-    return LFOShape::Sine; // fallback for unknown/corrupt values
+    if (s == "Custom")        return LFOShape::Custom;
+    return LFOShape::Sine;
 }
 
 static std::string shapeToString(LFOShape s) {
@@ -23,6 +24,7 @@ static std::string shapeToString(LFOShape s) {
         case LFOShape::SawDown:       return "SawDown";
         case LFOShape::Triangle:      return "Triangle";
         case LFOShape::SampleAndHold: return "SampleAndHold";
+        case LFOShape::Custom:        return "Custom";
         default:                      return "Sine";
     }
 }
@@ -31,7 +33,7 @@ static LFOTarget targetFromString(const std::string& s) {
     if (s == "Filter") return LFOTarget::Filter;
     if (s == "Pan")    return LFOTarget::Pan;
     if (s == "Pitch")  return LFOTarget::Pitch;
-    return LFOTarget::Volume; // fallback for unknown/corrupt values
+    return LFOTarget::Volume;
 }
 
 static std::string targetToString(LFOTarget t) {
@@ -56,22 +58,48 @@ std::vector<PresetData> parsePresetsJson(const std::string& jsonStr) {
         auto j = json::parse(jsonStr);
         for (auto& p : j["presets"]) {
             PresetData preset;
-            preset.name = p["name"].get<std::string>();
+            preset.name         = p["name"].get<std::string>();
+            preset.filterLowCut  = p.value("filterLowCut",   20.0f);
+            preset.filterHighCut = p.value("filterHighCut", 20000.0f);
+
             int i = 0;
             for (auto& l : p["lfos"]) {
-                if (i >= 4) break; // guard before write
-                preset.lfos[i].shape     = shapeFromString(l["shape"]);
-                preset.lfos[i].rateIndex = rateIndexFromString(l["rate"]);
-                preset.lfos[i].target    = targetFromString(l["target"]);
-                preset.lfos[i].depth     = l["depth"].get<float>();
-                preset.lfos[i].enabled   = l["enabled"].get<bool>();
+                if (i >= 4) break;
+                preset.lfos[i].shape      = shapeFromString(l["shape"]);
+                preset.lfos[i].rateIndex  = rateIndexFromString(l["rate"]);
+                preset.lfos[i].target     = targetFromString(l["target"]);
+                preset.lfos[i].depth      = l["depth"].get<float>();
+                preset.lfos[i].enabled    = l["enabled"].get<bool>();
+                preset.lfos[i].smoothing   = l.value("smoothing",   0.0f);
+                preset.lfos[i].pitchCenter = l.value("pitchCenter",  0.0f);
+
+                if (l.contains("customWave")) {
+                    auto& cw  = preset.lfos[i].customWave;
+                    auto& jcw = l["customWave"];
+                    cw.isStepMode = jcw.value("isStepMode", false);
+                    cw.stepCount  = jcw.value("stepCount",  16);
+                    if (jcw.contains("steps")) {
+                        int n = 0;
+                        for (auto& v : jcw["steps"]) {
+                            if (n >= 32) break;
+                            cw.steps[n++] = v.get<float>();
+                        }
+                    }
+                    if (jcw.contains("nodes")) {
+                        cw.nodeCount = 0;
+                        for (auto& nd : jcw["nodes"]) {
+                            if (cw.nodeCount >= 32) break;
+                            cw.nodes[cw.nodeCount++] = {
+                                nd["x"].get<float>(), nd["y"].get<float>()
+                            };
+                        }
+                    }
+                }
                 ++i;
             }
             result.push_back(preset);
         }
-    } catch (const json::exception&) {
-        // malformed JSON — return empty rather than crashing the host
-    }
+    } catch (const json::exception&) {}
     return result;
 }
 
@@ -83,19 +111,52 @@ std::vector<PresetData> loadPresetsFromFile(const std::string& filePath) {
     return parsePresetsJson(content);
 }
 
+bool savePresetsToFile(const std::vector<PresetData>& presets, const std::string& filePath) {
+    json root;
+    root["presets"] = json::array();
+    for (const auto& p : presets)
+        root["presets"].push_back(json::parse(serializePreset(p)));
+    std::ofstream f(filePath);
+    if (!f.is_open()) return false;
+    f << root.dump(2);
+    return f.good();
+}
+
 std::string serializePreset(const PresetData& preset) {
     json j;
-    j["name"] = preset.name;
-    j["lfos"] = json::array();
+    j["name"]          = preset.name;
+    j["filterLowCut"]  = preset.filterLowCut;
+    j["filterHighCut"] = preset.filterHighCut;
+    j["lfos"]          = json::array();
+
     for (const auto& lfo : preset.lfos) {
         int rateIdx = std::clamp(lfo.rateIndex, 0, LFO_RATE_COUNT - 1);
-        j["lfos"].push_back({
-            {"shape",   shapeToString(lfo.shape)},
-            {"rate",    LFO_RATES[rateIdx].name},
-            {"target",  targetToString(lfo.target)},
-            {"depth",   lfo.depth},
-            {"enabled", lfo.enabled}
-        });
+        json lfoObj = {
+            {"shape",       shapeToString(lfo.shape)},
+            {"rate",        LFO_RATES[rateIdx].name},
+            {"target",      targetToString(lfo.target)},
+            {"depth",       lfo.depth},
+            {"enabled",     lfo.enabled},
+            {"smoothing",   lfo.smoothing},
+            {"pitchCenter", lfo.pitchCenter}
+        };
+
+        if (lfo.shape == LFOShape::Custom) {
+            json jcw;
+            jcw["isStepMode"] = lfo.customWave.isStepMode;
+            jcw["stepCount"]  = lfo.customWave.stepCount;
+            json steps = json::array();
+            for (int s = 0; s < lfo.customWave.stepCount; ++s)
+                steps.push_back(lfo.customWave.steps[s]);
+            jcw["steps"] = steps;
+            json nodes = json::array();
+            for (int n = 0; n < lfo.customWave.nodeCount; ++n)
+                nodes.push_back({{"x", lfo.customWave.nodes[n].x},
+                                 {"y", lfo.customWave.nodes[n].y}});
+            jcw["nodes"]         = nodes;
+            lfoObj["customWave"] = jcw;
+        }
+        j["lfos"].push_back(lfoObj);
     }
     return j.dump(2);
 }
