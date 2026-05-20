@@ -84,3 +84,74 @@ TEST_CASE("Out-of-range rateIndex falls back to 1/4", "[rates]") {
     float incBad  = lfoPhaseIncrement(999,           120.0f, 44100.0f);
     REQUIRE_THAT(incBad, WithinAbs(inc4, 0.0000001f));
 }
+
+// ── Custom waveform ───────────────────────────────────────────────────
+
+TEST_CASE("Custom breakpoint: no nodes returns 0", "[custom]") {
+    LFOInstance lfo; lfo.shape = LFOShape::Custom;
+    lfo.customWave.isStepMode = false;
+    lfo.customWave.nodeCount  = 0;
+    REQUIRE_THAT(lfoValueAtPhase(lfo, 0.5f), WithinAbs(0.0f, 0.001f));
+}
+
+TEST_CASE("Custom breakpoint: two nodes interpolates linearly", "[custom]") {
+    LFOInstance lfo; lfo.shape = LFOShape::Custom;
+    lfo.customWave.isStepMode   = false;
+    lfo.customWave.nodeCount    = 2;
+    lfo.customWave.nodes[0]     = {0.0f, -1.0f};
+    lfo.customWave.nodes[1]     = {1.0f,  1.0f};
+    REQUIRE_THAT(lfoValueAtPhase(lfo, 0.0f),  WithinAbs(-1.0f, 0.001f));
+    REQUIRE_THAT(lfoValueAtPhase(lfo, 0.5f),  WithinAbs( 0.0f, 0.001f));
+    REQUIRE_THAT(lfoValueAtPhase(lfo, 1.0f),  WithinAbs( 1.0f, 0.001f));
+}
+
+TEST_CASE("Custom breakpoint: phase before first node clamps to first node y", "[custom]") {
+    LFOInstance lfo; lfo.shape = LFOShape::Custom;
+    lfo.customWave.isStepMode   = false;
+    lfo.customWave.nodeCount    = 2;
+    lfo.customWave.nodes[0]     = {0.3f, -0.5f};
+    lfo.customWave.nodes[1]     = {0.8f,  0.5f};
+    REQUIRE_THAT(lfoValueAtPhase(lfo, 0.0f),  WithinAbs(-0.5f, 0.001f));
+}
+
+TEST_CASE("Custom step: 4 steps returns correct step value", "[custom]") {
+    LFOInstance lfo; lfo.shape = LFOShape::Custom;
+    lfo.customWave.isStepMode = true;
+    lfo.customWave.stepCount  = 4;
+    lfo.customWave.steps[0]   = -1.0f;
+    lfo.customWave.steps[1]   =  0.0f;
+    lfo.customWave.steps[2]   =  0.5f;
+    lfo.customWave.steps[3]   =  1.0f;
+    REQUIRE_THAT(lfoValueAtPhase(lfo, 0.1f),  WithinAbs(-1.0f, 0.001f));
+    REQUIRE_THAT(lfoValueAtPhase(lfo, 0.3f),  WithinAbs( 0.0f, 0.001f));
+    REQUIRE_THAT(lfoValueAtPhase(lfo, 0.6f),  WithinAbs( 0.5f, 0.001f));
+    REQUIRE_THAT(lfoValueAtPhase(lfo, 0.9f),  WithinAbs( 1.0f, 0.001f));
+}
+
+// ── Smoothing ─────────────────────────────────────────────────────────
+
+TEST_CASE("Smoothing=0 does not change output at mid-cycle", "[smoothing]") {
+    LFOInstance lfo; lfo.shape = LFOShape::SawUp; lfo.smoothing = 0.0f;
+    float inc = lfoPhaseIncrement(LFO_RATE_1_4, 120.0f, 44100.0f);
+    for (int i = 0; i < 11025; ++i) lfoAdvance(lfo, inc, 44100.0f);
+    float withSmooth = lfoAdvance(lfo, inc, 44100.0f);
+    float expected   = lfoValueAtPhase(lfo, lfo.phase);
+    REQUIRE_THAT(withSmooth, WithinAbs(expected, 0.001f));
+}
+
+TEST_CASE("Smoothing ramp: output near 0 just after phase wrap", "[smoothing]") {
+    LFOInstance lfo; lfo.shape = LFOShape::SawUp; lfo.smoothing = 1.0f;
+    lfo.phase = 0.999f;
+    float inc = lfoPhaseIncrement(LFO_RATE_1_4, 120.0f, 44100.0f);
+    float val = lfoAdvance(lfo, inc, 44100.0f);
+    REQUIRE(std::abs(val) < 0.5f);
+}
+
+TEST_CASE("Smoothing ramp: output near 0 just before phase wrap", "[smoothing]") {
+    LFOInstance lfo; lfo.shape = LFOShape::SawUp; lfo.smoothing = 1.0f;
+    float inc = lfoPhaseIncrement(LFO_RATE_1_4, 120.0f, 44100.0f);
+    float target = 1.0f - 2.0f * inc;
+    while (lfo.phase < target) lfoAdvance(lfo, inc, 44100.0f);
+    float val = lfoAdvance(lfo, inc, 44100.0f);
+    REQUIRE(std::abs(val) < 0.5f);
+}
