@@ -55,3 +55,17 @@ TEST_CASE("lfoAdvance S&H value stays in [-1, 1] after wrap", "[advance]") {
     REQUIRE(lfo.sampleAndHoldValue >= -1.0f);
     REQUIRE(lfo.sampleAndHoldValue <= 1.0f);
 }
+TEST_CASE("1/4 note at 120 BPM, 44100 Hz = 22050 samples per cycle", "[rates]") {
+    float inc = lfoPhaseIncrement(LFO_RATE_1_4, 120.0f, 44100.0f);
+    REQUIRE_THAT(1.0f / inc, WithinRel(22050.0f, 0.001f));
+}
+TEST_CASE("1/8 rate is exactly double the 1/4 rate", "[rates]") {
+    float inc4 = lfoPhaseIncrement(LFO_RATE_1_4, 120.0f, 44100.0f);
+    float inc8 = lfoPhaseIncrement(LFO_RATE_1_8, 120.0f, 44100.0f);
+    REQUIRE_THAT(inc8 / inc4, WithinRel(2.0f, 0.001f));
+}
+TEST_CASE("1/4t (triplet) is 3/2 the speed of 1/4", "[rates]") {
+    float inc4  = lfoPhaseIncrement(LFO_RATE_1_4,  120.0f, 44100.0f);
+    float inc4t = lfoPhaseIncrement(LFO_RATE_1_4T, 120.0f, 44100.0f);
+    REQUIRE_THAT(inc4t / inc4, WithinRel(1.5f, 0.001f));
+}
