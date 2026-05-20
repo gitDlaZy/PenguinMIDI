@@ -10,6 +10,7 @@ add_executable(PenguinLFO_Tests
     test_lfo_engine.cpp
     test_preset_manager.cpp
     ../Source/LFOEngine.cpp
+    ../Source/PresetManager.cpp
 )
 
 target_link_libraries(PenguinLFO_Tests PRIVATE Catch2::Catch2WithMain)
