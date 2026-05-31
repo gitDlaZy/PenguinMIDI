@@ -931,6 +931,7 @@
       <button class="btn btn-secondary" id="btn-save-midi" style="background:#1a1a2a;border-color:#7ec8e3;color:#7ec8e3;">💾 Save MIDI</button>
       <button class="btn btn-secondary" id="btn-save-drums" style="background:#2a1a1a;border-color:#ff6b6b;color:#ff6b6b;">💾 Save Drums</button>
       <button class="btn btn-secondary" id="btn-save-global" style="background:#1a2a1a;border-color:#22c55e;color:#22c55e;">💾 Save All</button>
+      <button class="btn btn-secondary" id="btn-share" style="background:#1a1a2a;border-color:#a78bfa;color:#a78bfa;">🔗 Share</button>
     </div>
   </div>
 
@@ -1042,8 +1043,50 @@ async function _initBridge() {
   } else {
     try { _patternCache = JSON.parse(localStorage.getItem('penguinPatterns') || '[]'); }
     catch(e) { _patternCache = []; }
-    _loadSession();
+    if (!_loadFromUrl()) _loadSession();
   }
+}
+
+// ─── URL SHARE ────────────────────────────────────────────────────────────────
+function _encodeShare() {
+  const s = {
+    b: state.bars,
+    n: state.noteDiv,
+    bpm: parseInt(document.getElementById('bpm').value) || 120,
+    k: document.getElementById('key-select').value,
+    sc: document.getElementById('scale-select').value,
+    d: drumState.pattern,
+    ds: drumState.style,
+  };
+  return btoa(encodeURIComponent(JSON.stringify(s)));
+}
+
+function _loadFromUrl() {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#s=')) return false;
+  try {
+    const s = JSON.parse(decodeURIComponent(atob(hash.slice(3))));
+    if (s.b)   state.bars       = s.b;
+    if (s.n)   state.noteDiv    = s.n;
+    if (s.bpm) document.getElementById('bpm').value   = s.bpm;
+    if (s.k)   document.getElementById('key-select').value   = s.k;
+    if (s.sc)  document.getElementById('scale-select').value = s.sc;
+    if (s.d)   drumState.pattern = s.d;
+    if (s.ds)  drumState.style   = s.ds;
+    document.querySelectorAll('#note-length .pill').forEach(p =>
+      p.classList.toggle('active', parseInt(p.dataset.val) === state.noteDiv));
+    return true;
+  } catch(e) { return false; }
+}
+
+function shareLink() {
+  const url = window.location.origin + window.location.pathname + '#s=' + _encodeShare();
+  navigator.clipboard.writeText(url).then(() => {
+    setStatus('Link copied — paste to share! 🔗', 'active');
+    setTimeout(() => setStatus('Ready', 'idle'), 2500);
+  }).catch(() => {
+    prompt('Copy this link:', url);
+  });
 }
 
 function saveMidi() {
@@ -2280,6 +2323,7 @@ for (let i = 0; i < 80; i++) {
 
 // ─── BUTTON WIRING ────────────────────────────────────────────────────────────
 document.getElementById('btn-generate').addEventListener('click', generateAll);
+document.getElementById('btn-share').addEventListener('click', shareLink);
 document.getElementById('btn-save-midi').addEventListener('click', () => {
   const panel = document.getElementById('pattern-panel');
   panel.style.display = 'block';
