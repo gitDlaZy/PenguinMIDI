@@ -1,0 +1,1058 @@
+# 🐧 PENGUIN SUITE — MASTER CONTEXT FILE
+# Version 0.1 — Generated from holiday brainstorm session
+# Read this entire file before starting any work.
+# This is the single source of truth for the Penguin Suite project.
+
+---
+
+## WHO I AM & WHAT WE'RE BUILDING
+
+I am building the Penguin Suite — a collection of 9 music production VST plugins and desktop apps built with AI assistance. The suite is designed for music producers, with a focus on ease of use, deep DAW integration, and AI-powered features.
+
+All plugins output VST2 and VST3 (and AU on Mac).
+VST2 is included specifically for MPC2 (Akai) compatibility — personal use only, not for redistribution due to Steinberg licensing.
+
+The name "Penguin Suite" is kept as-is. Trademark review deferred until commercial release.
+
+The primary producer is a techno producer. Every plugin in the suite must include techno presets alongside Boom Bap, House, Pop and D&B. Techno BPM range: 130-145. Techno references: Drumcode, Afterlife, Berghain sound.
+
+Primary DAW: MPC2 (Akai) — keep this in mind for all compatibility decisions.
+Primary machine: Windows PC, Nvidia RTX 3060, running Ollama with a local LLM (4b or 8b model — check which is running with `ollama list`).
+
+---
+
+## TECH STACK
+
+### VST Plugins
+- JUCE framework — C++, compiles to VST2, VST3, AU, Standalone from one codebase
+- VST2 for MPC2 compatibility (personal use only)
+- pybind11 for Python/C++ bridge where needed (PenguinSplit)
+- Demucs + CUDA for GPU stem separation (PenguinSplit)
+- Salamander Grand Piano samples for piano sound (PenguinMIDI VST, PenguinSynthesia)
+
+### Desktop Apps
+- Electron or Tauri — cross platform Windows/Mac
+- Local LLM via Ollama — Mistral 7b or Llama 3 8b
+- Freesound API — free, needs one API key (PenguinFind)
+- IMSLP — public domain MIDI files for classical library (PenguinSynthesia)
+
+### Shared Across All Plugins
+- Shared config file on user machine — all plugins read: Key, Scale, BPM, Genre preset
+- Shared DSP utilities — scale logic, BPM sync, MIDI helpers
+- Consistent Penguin visual identity
+
+---
+
+## REPO STRUCTURE
+
+```
+penguin-suite/                  ← root repo, one Claude Project in Claude Code
+  CONTEXT.md                    ← short version of this file for quick loading
+  MASTER_CONTEXT.txt            ← this file — full detail
+  PenguinSuite-Spec-v2.docx     ← full spec document
+  shared/
+    dsp/                        ← shared DSP code
+    scale-utils/                ← scale/key/BPM utilities
+    branding/                   ← logos, colors, fonts
+  packages/
+    penguin-lfo/
+      Dockerfile
+      vst/
+    penguin-midi/
+      Dockerfile
+      web-prototype/
+        index.html              ← WORKING WEB PROTOTYPE (see below)
+      vst/
+    penguin-fx/
+      Dockerfile
+      vst/
+    penguin-voice/
+      Dockerfile
+      vst/
+    penguin-serum/
+      Dockerfile
+      app/
+    penguin-dj/
+      Dockerfile
+      vst/
+    penguin-split/
+      Dockerfile
+      vst/
+    penguin-find/
+      Dockerfile
+      vst/
+    penguin-synthesia/
+      Dockerfile
+      app/
+    penguin-chop/
+      Dockerfile
+      vst/
+    penguin-master/
+      Dockerfile
+      vst/
+    penguin-stereo/
+      Dockerfile
+      vst/
+```
+
+### Docker per package
+Each package gets its own Dockerfile when development starts — don't create them all upfront, create as you go.
+
+---
+
+## BUILD ORDER
+
+1. PenguinMIDI VST — web prototype done, lowest risk entry point
+2. PenguinLFO — simpler DSP, good first JUCE project
+3. PenguinSplit — Demucs + CUDA bundling, most technically interesting
+4. PenguinFX — most complex DSP, build after JUCE is familiar
+5. PenguinVoice — complex signal chain, build after FX
+6. PenguinDJ, PenguinFind, PenguinSerum, PenguinSynthesia — after core plugins done
+
+---
+
+## PENGUINMIDI WEB PROTOTYPE — STATUS: COMPLETE
+
+A fully working web prototype exists at:
+packages/penguin-midi/web-prototype/index.html
+
+### What the prototype does:
+- 4-bar step sequencer, 16 steps per bar
+- Scale-aware note picker — tap any cell to pick a note from the current scale
+- Key & scale selector (inline panel, iPhone friendly)
+- Generate All — fills bars with in-scale notes
+- Feel slider (melodic to chaotic) and Density slider
+- Hum / Listen — records 4 seconds of mic input, converts pitch to MIDI notes snapped to scale
+- Edit mode — precise note editing per cell
+- Piano sound engine — synthesized piano with harmonics (upgrade to Salamander in VST)
+- Drum machine — independent 16-step sequencer, 5 drum types
+- 4 drum styles with auto BPM: Boom Bap (96), House (128), Pop (118), D&B (174)
+- Drum preset save/load with names
+- PenguinPatterns — save/load named note patterns with key, scale, note division
+- MIDI export — exports real .mid file
+- BPM control
+- All built mobile-friendly for iPhone use
+
+### VST version — what changes:
+- Replace synthesized piano with Salamander Grand Piano samples
+- Add proper MIDI output to DAW instead of file export
+- Rebuild UI in JUCE
+- Use prototype as the exact spec for feature set
+
+---
+
+## SHARED SUITE SETTINGS
+
+All plugins read from a shared local config file.
+Set once, all plugins know it.
+
+- Key — C through B
+- Scale — Major, Minor, Pentatonic, Blues, Dorian, Mixolydian
+- BPM — manual, syncs across plugins
+- Genre preset — Boom Bap (96 BPM), House (128 BPM), Pop (118 BPM), D&B (174 BPM)
+
+---
+
+## PLUGIN 1 — PENGUINLFO
+
+### What it does
+Adds movement and modulation to any sound. BPM-synced. One-click presets. Adds a heartbeat to flat, lifeless sounds.
+
+### Form
+VST2 + VST3
+
+### Modulation Types
+- Volume gating — rhythmic breathing pulse
+- Filter sweep — brighter/darker cyclically
+- Panning — stereo wobble
+- Stutter — rhythmic chop like DJ effect
+
+### BPM Sync
+- Locked to project BPM
+- Subdivisions: 1/4, 1/8, 1/16, 1/32, triplet, dotted
+
+### Presets
+- Hard Gate, Slow Breathe, Sidechain Pulse, Tremolo, Filter Flutter, Pan Wobble, Stutter Cut
+- User can save custom presets
+
+### Controls
+- LFO shape: Sine, Square, Saw, Triangle, Random (S&H)
+- Depth: 0-100%
+- Phase offset
+- Smoothing
+- Any PenguinFX parameter can be modulated by PenguinLFO (cross-plugin)
+
+---
+
+## PLUGIN 2 — PENGUINMIDI
+
+### What it does
+Step sequencer and MIDI pattern builder. Core purpose: capture a musical idea instantly before it fades.
+
+### Form
+VST2 + VST3
+Web prototype complete — see packages/penguin-midi/web-prototype/index.html
+
+### Features
+- 4 bars of 4/4, 16 steps per bar
+- Note length: 1/4, 1/8, 1/16
+- Scale-aware note picker per cell
+- Key & scale lock — all notes stay in scale
+- Generate Now — one-click fill all bars
+- Feel slider: melodic to chaotic
+- Density slider: sparse to busy
+- Hum capture — mic input to MIDI
+- Edit mode — precise per-cell editing
+- Drum machine — independent 16-step clock, 5 drum types
+- Genre styles: Boom Bap (96), House (128), Pop (118), D&B (174)
+- Drum preset save/load
+- PenguinPatterns — named pattern save/load
+- MIDI export
+- BPM control
+- Piano sound: Salamander Grand Piano in VST version
+
+### Chord Generator (mode inside PenguinMIDI)
+- Pick root note and scale
+- Shows suggested chord progressions
+- One click drops chord into the grid
+- Connects with existing scale lock system
+- Common progressions: I-IV-V, ii-V-I, I-V-vi-IV etc
+
+---
+
+## PLUGIN 3 — PENGUINFX
+
+### What it does
+Modular effects chain plugin. Pro-grade controls. Add, remove, reorder effects freely. Any parameter modulatable by PenguinLFO. Genre presets apply full chains instantly.
+
+### Form
+VST2 + VST3
+Drag-and-drop modular chain
+Save/load named chains as presets
+Genre presets: Boom Bap, House, Pop, D&B
+
+### Dynamics
+- Compressor — threshold, ratio, attack, release, knee, makeup gain, sidechain
+- Multiband Compressor — up to 4 bands
+- Limiter — ceiling, lookahead, release
+- Gate / Expander
+- Maximizer — single-knob loudness
+- De-esser
+- Clipper — soft/hard
+- Sidechain Compressor
+
+### Time-Based
+- Delay — ms or BPM sync, feedback, mix, filter per repeat
+- Delay types — ping pong, tape, analog, ducking, reverse
+- Diffusion Delay — smears repeats into reverb-like tail
+- Differential Delay — independent L/R times for stereo width
+- Reverb — full controls
+- Early Reflections — standalone unit
+- Room Simulator — studio, hall, chamber, plate
+- Chorus, Flanger, Phaser
+
+### Modulation
+- Tremolo (BPM sync)
+- Auto-pan
+- Vibrato
+- Ring Modulator
+
+### Tone
+- EQ — parametric, up to 8 bands
+- Distortion / Saturation — tape, tube, transistor, hard clip, foldback
+- Tape Saturation
+- Vinyl / Lo-fi
+- Bitcrusher
+- Exciter / Harmonics
+- Cabinet / Amp Simulator
+- Comb Filter
+
+### Space & Stereo
+- Stereo Imager
+- Stereo Widener — mono below crossover
+- Mono Maker
+
+### Creative / Experimental
+- Granular Effect
+- Pitch Shifter
+- Formant Shifter
+- Frequency Shifter
+- Stutter / Glitch — PenguinLFO integration
+
+### Utility
+- DC Offset Remover
+- Phase Flipper
+- Gain Staging Meter
+- Correlation Meter
+- Spectrum Analyser
+
+---
+
+## PLUGIN 4 — PENGUINVOICE
+
+### What it does
+Professional vocal transformation plugin. Covers everything from subtle thickening to extreme sound design. Inspired by Infected Mushroom's Manipulator but goes much deeper. Includes vocoder and talkbox.
+
+### Form
+VST2 + VST3
+
+### Modes
+- PRE-REC — monitor through plugin before and while recording
+- POST — process recorded vocal in DAW
+
+### Record Toggle (PRE-REC mode)
+- DRY — hear wet, record dry (safe, default)
+- WET — hear wet, record wet (committed)
+
+### Transformation Modes
+- NATURAL — subtle, hidden parameters
+- CREATIVE — obvious transformation, musical
+- EXTREME — full alien/demon/robot territory, everything exposed
+
+### Core Controls
+- XY pad — fully assignable axes (default: X = pitch, Y = formant)
+- Pitch shift — semitones, cents
+- Formant shift — independent of pitch
+- Mix — dry/wet
+- Stereo width
+
+### Optional AI Pitch Correction
+- OFF by default — never automatic
+- Strength: 0-100%
+- Speed: slow/natural to fast/T-Pain
+- Reads from shared suite key/scale settings
+- Runs on local LLM — no cloud cost
+
+### Advanced Processing
+- Multi-band processing — transform each frequency band independently
+- Spectral morphing — blend spectral character of one sound into vocal
+- Granular mode — grain-based transformation (ghostly, ethereal textures)
+- Convolution character — apply resonance of physical objects to voice
+- Vocal Fingerprint — analyse vocal A, apply character to vocal B
+
+### Character Section
+- Tube warmth
+- Bitcrush
+- Ring mod
+- Rectifier
+- Noise blend (breath, static, tape hiss)
+- Each with own mix knob
+
+### Vocoder
+- Classic vocoder — 8, 16, 32, 64 band options
+- Talkbox mode — warmer, more organic
+- Built-in carrier synth — saw, square, noise waveforms
+- External sidechain — route any DAW track as carrier
+- Chord mode — carrier plays chords from key/scale settings
+- Noise carrier — whispered vocoder texture
+
+### Extra Features
+- Chord / harmony voices — generates harmonies at set intervals
+- Humanize — subtle random pitch micro-variations
+- Automation ready — all parameters including XY position
+- PenguinLFO integration — modulate XY pad and any parameter
+
+### Latency Tiers
+- PRE-REC mode: low latency — pitch/formant/vocoder/XY available, granular at preview quality
+- POST mode: no latency limit — everything at full quality, offline render option
+
+### Presets
+- Organic, Textural, Character, Extreme, Cinematic
+- Demon, Giant, Chipmunk, Robot, Ghost, Alien, Child, Monster
+- Natural Harmony, Subtle Thicken, Megaphone, Telephone
+- User save/tag system
+
+### Signal Chain
+```
+Input
+  → [AI Pitch Correct — optional]
+  → [Band split — optional]
+  → Per band: Pitch / Formant / Character
+  → Reassemble
+  → [Granular — optional]
+  → [Spectral morph — optional]
+  → [Vocoder — optional]
+  → Chord voices
+  → Humanize
+  → Output
+```
+
+---
+
+## PLUGIN 5 — PENGUINSERUM
+
+### What it does
+AI sound design tool for Serum. Describe a sound in plain language, AI builds the patch.
+
+### Form
+Desktop app with Serum VST bridge (may evolve to VST later)
+
+### Features
+- Text-to-patch — local LLM interprets description, no cloud cost
+- Generates oscillator, filter, envelope, LFO, effects settings
+- Patch randomizer — full or per-section
+- Seed control — regenerate same patch
+- Patch browser — save, tag, search
+
+---
+
+## PLUGIN 6 — PENGUINDJ
+
+### What it does
+Fully automatic DJ VST. Select a folder, press play. Handles BPM matching, harmonic mixing via Circle of Fifths, automatic transitions. Records output directly into DAW.
+
+### Form
+VST2 + VST3
+
+### Core Flow
+1. Select folder of audio tracks
+2. Auto-analyse: BPM, key, energy level per track
+3. Build optimal play order via Circle of Fifths scoring
+4. Mix continuously with automatic transitions
+5. Press play — do nothing else
+
+### Key Matching Priority (no shifting unless absolutely necessary)
+1. Same key — mix freely
+2. Circle of Fifths neighbours — compatible, no shifting
+3. Relative major/minor — same notes, no shifting
+4. Pitch shift — last resort only, flagged visually
+
+### Transition Types
+- Classic crossfade
+- Filter sweep (high pass out, low pass in)
+- Echo out / drop in
+- Cut on the beat
+- Spinback
+
+### PenguinSplit Integration
+- Strips drums from outgoing track during transition
+- Prevents drum clash
+- Stem-aware blending
+
+### Controls
+- Folder selector
+- Energy curve: Chill / Balanced / Peak Time
+- Transition style: Smooth / Hard / Random
+- Skip button
+- Lock track button
+
+### Time Stretch Limits (avoids artefacts)
+- Within 5% BPM difference → stretch freely, undetectable
+- 5-15% BPM difference → stretch with caution, yellow indicator
+- Beyond 15% → no stretch, use alternatives:
+  - Half/double time matching (90 BPM matches 180 BPM naturally)
+  - Skip to next compatible track
+  - Switch to hard cut transition on downbeat
+- Per-track compatibility indicator: 🟢 / 🟡 / 🔴
+
+### Additional Features
+- Stem-aware mixing — bring in bass of track B before full track, drop vocals of track A before transition
+- Energy curve editor — draw custom energy shape over time (build 20min, peak 10min, cool down 5min)
+- Loop points — AI detects natural loop points, loops section while next track analyses
+- BPM half/double time matching — musical solution for big BPM differences
+- No dead air guarantee — loop points prevent gaps between tracks
+
+---
+
+## PLUGIN 7 — PENGUINSPLIT
+
+### What it does
+AI stem splitter VST. Drop a track in, get separate stems routed to individual DAW channels. Powered by Meta's Demucs, fully bundled — no companion app, no internet.
+
+### Form
+VST2 + VST3
+Demucs + Python runtime bundled in DLL (~300mb)
+
+### Technical Architecture
+- Demucs htdemucs model
+- Python embedded via pybind11 (C++/JUCE bridge)
+- CUDA GPU primary — Nvidia RTX optimised (baseline: RTX 3060)
+- CPU fallback automatic
+- GPU/CPU status indicator in UI
+
+### Performance on RTX 3060
+- 4 min track: 15-20 seconds
+- 8 min track: 30-40 seconds
+- Progress animation shown
+
+### Stem Modes
+Basic: Drums, Bass, Vocals, Other
+Extended: Drums, Bass, Vocals, Keys/Synths, Guitar, Melody/Lead
+
+### Model Quality Toggle
+- htdemucs — best quality
+- htdemucs_ft — best for vocals
+- mdx_extra — faster
+
+### DAW Integration
+- Each stem → own named, colour-coded DAW channel
+- BPM detection per stem
+- Key detection per stem → feeds shared suite settings
+- PenguinDJ integration for clean transitions
+
+---
+
+## PLUGIN 8 — PENGUINFIND
+
+### What it does
+Sample search VST. Type a description, find samples from Freesound or local library, preview, drag into DAW.
+
+### Form
+VST2 + VST3
+
+### Search Sources
+- Freesound.org — 500k+ creative commons, free API key needed
+- Local sample library — indexed once, not rescanned unless requested
+- Each source toggled independently
+
+### Smart Search
+- Text prompt — local LLM handles understanding, no cloud cost
+- BPM filter — near project BPM
+- Key/scale filter — manual, from suite settings
+- Length filter — hits, loops, textures
+- Format filter — WAV, AIFF, MP3
+
+### Reverse Search
+- Drag existing sample → finds sonically similar samples
+
+### DAW Integration
+- Preview in plugin
+- One click → download + add to DAW browser
+- Drag onto track
+- Auto time-stretch to project BPM
+
+---
+
+## APP 1 — PENGUINSYNTHESIA
+
+### What it does
+AI-powered piano teaching desktop app. Visual falling notes, MIDI keyboard input, strict AI teacher. Songs locked behind tiers, unlocked by completing previous tier. Classical library from IMSLP (public domain).
+
+### Form
+Desktop app — Windows and Mac
+MIDI keyboard required (no on-screen keyboard — keeps it serious)
+Salamander Grand Piano for playback
+
+### AI Teacher Personality
+- Strict — tough love, no fluff, short direct feedback
+- Local LLM: real-time responses (timing, notes, velocity)
+- Claude: deep theory explanations on demand only (saves tokens)
+- Adjusts slightly per genre: classical = phrasing, producer = groove
+
+### Example Teacher Phrases
+- "Wrong note on beat 2. Again from the top."
+- "85% required. You got 71%. Again."
+- "Stop guessing. Learn the notes first."
+- "...Not bad." — reserved for completing La Campanella only
+
+### Demo System
+- No demo by default
+- Request with "show me" — teacher plays perfect MIDI rendition
+- Demo penalty: threshold raises from 85% to 90%
+- "Fine. Watch carefully. You won't get this grace again."
+
+### Feedback Layers
+Layer 1 — Real-time (local LLM):
+- Wrong notes in red
+- Timing deviation in ms
+- Velocity feedback
+- Rushes/drags per beat
+
+Layer 2 — End of attempt (local LLM):
+- Accuracy % per bar
+- Timing/velocity consistency scores
+- Weakest bar identified
+- Comparison to previous attempt
+
+Layer 3 — Deep explanation (Claude, on demand):
+- Music theory in producer language
+- References known songs/samples
+- Finger technique
+- Only when user asks
+
+### Practice Modes
+- Performance — play through
+- Practice — stops at mistakes
+- Loop — loops selection
+- Hands separately
+
+### Progression Rules
+- 85% accuracy required to advance
+- Speed locked: 60% → 80% → 100% unlocks
+- Hands separately before together
+- 3 perfect consecutive runs to pass
+- Penalty mode: wrong note = +5 seconds on timer
+
+### Ghost Hands
+- Hidden by default
+- Unlocks after 5 failed attempts in a row
+- Disappears after 30 seconds
+- "I'll show you once. Remember it."
+
+### Progress Tracking
+- Per-song accuracy history
+- Timing/velocity consistency scores
+- Notes played per session
+- Streak tracking
+
+### Song Library — Tier System
+
+TIER 1 ⭐ — First Keys (unlocked immediately)
+Bach — Minuet in G major BWV 114
+Bach — Minuet in G minor BWV 115
+Beethoven — Ode to Joy (simplified)
+Mozart — Twinkle Twinkle Variations (theme)
+Handel — Minuet in G
+Schumann — Melody Op.68 No.1
+Schumann — Soldiers March Op.68 No.2
+Schumann — The Wild Horseman Op.68 No.8
+Clementi — Sonatina Op.36 No.1 (1st movement)
+Bartók — For Children Vol.1 No.1 & No.2
+User import slot — any beginner MIDI
+PenguinMIDI import — simple one-hand patterns
+Unlock reward: "You have the basics. Do not get comfortable."
+
+TIER 2 ⭐⭐ — Beginner
+Beethoven — Für Elise (opening theme)
+Beethoven — Moonlight Sonata Op.27 (1st movement, slow section)
+Satie — Gymnopédie No.1, No.2, No.3
+Satie — Gnossiénne No.1
+Mozart — Sonata K.545 (1st movement, simplified)
+Mozart — Rondo Alla Turca (simplified)
+Bach — Prelude in C major BWV 846
+Grieg — Morning Mood (simplified)
+Schubert — Waltz in B minor Op.18
+Schubert — Moment Musical No.3
+Handel — Sarabande in D minor
+Tchaikovsky — Swan Lake theme (simplified)
+Tchaikovsky — Waltz of the Flowers (simplified)
+User import slot
+PenguinMIDI import — both hands introduced
+Unlock reward: Ghost Hands feature unlocked
+
+TIER 3 ⭐⭐⭐ — Intermediate
+Bach — Invention No.1 BWV 772
+Bach — Invention No.4 BWV 775
+Bach — Invention No.8 BWV 779
+Bach — Invention No.13 BWV 784
+Bach — Prelude in D minor BWV 851
+Beethoven — Sonata Op.49 No.2
+Beethoven — Moonlight Sonata (full 1st movement)
+Mozart — Sonata K.331 (theme and variations)
+Mozart — Sonata K.545 (complete)
+Chopin — Nocturne Op.9 No.2
+Chopin — Prelude in E minor Op.28 No.4
+Chopin — Prelude in A major Op.28 No.7
+Chopin — Waltz in A minor Op.Posth
+Debussy — Clair de Lune (opening section)
+Debussy — Arabesque No.1
+Grieg — In the Hall of the Mountain King (piano arrangement)
+Schumann — Träumerei Op.15 No.7
+Schubert — Impromptu Op.90 No.2 & No.4
+Tchaikovsky — Dance of the Sugar Plum Fairy (piano)
+Saint-Saëns — The Swan (piano arrangement)
+Ravel — Pavane pour une infante défunte
+Handel — Hallelujah (piano arrangement)
+Vivaldi — Four Seasons Spring (piano arrangement)
+User import slot
+PenguinMIDI import — full patterns, both hands
+Unlock reward: Sheet music mode unlocked, falling notes optional
+
+TIER 4 ⭐⭐⭐⭐ — Advanced
+Bach — Well-Tempered Clavier Book 1 (full preludes and fugues)
+Bach — Goldberg Variations (selected)
+Bach — Toccata and Fugue in D minor (piano arrangement)
+Beethoven — Moonlight Sonata 3rd movement
+Beethoven — Sonata Pathétique Op.13 (complete)
+Beethoven — Appassionata Sonata Op.57 (1st movement)
+Beethoven — Waldstein Sonata Op.53 (1st movement)
+Chopin — Nocturne Op.9 No.1 & Op.15 No.2
+Chopin — Fantasie Impromptu Op.66
+Chopin — Etude Op.10 No.3 (Tristesse)
+Chopin — Waltz Op.64 No.2
+Chopin — Polonaise Op.53 Heroic (opening section)
+Debussy — Clair de Lune (complete)
+Debussy — La Cathédrale Engloutie
+Debussy — Suite Bergamasque (complete)
+Ravel — Sonatine (1st movement)
+Ravel — Jeux d'eau
+Rachmaninoff — Prelude Op.23 No.5
+Rachmaninoff — Prelude Op.3 No.2 (C# minor)
+Rachmaninoff — Vocalise (piano arrangement)
+Schubert — Impromptu Op.142 No.2
+Schumann — Arabeske Op.18
+Brahms — Intermezzo Op.118 No.2
+Brahms — Waltz Op.39 No.15
+Prokofiev — Romeo and Juliet (piano arrangement)
+Mendelssohn — Songs Without Words (selected)
+Liszt — Consolation No.3
+Liszt — Liebestraum No.3
+Liszt — Hungarian Rhapsody No.2 (simplified)
+User import slot
+PenguinMIDI import — complex full arrangements
+Unlock reward: Free play mode unlocked. Teacher shows first hint of respect.
+
+TIER 5 ⭐⭐⭐⭐⭐ — Legendary
+Bach — Goldberg Variations (complete, all 30 variations)
+Bach — Chaconne in D minor BWV 1004 (piano arrangement)
+Beethoven — Hammerklavier Sonata Op.106
+Beethoven — Appassionata Sonata (complete)
+Beethoven — Diabelli Variations Op.120
+Chopin — Ballade No.1 in G minor Op.23 (complete)
+Chopin — Ballade No.4 in F minor
+Chopin — Etude Op.10 No.1 (Waterfall)
+Chopin — Etude Op.10 No.4
+Chopin — Etude Op.10 No.12 (Revolutionary)
+Chopin — Etude Op.25 No.11 (Winter Wind)
+Chopin — Polonaise Op.53 Heroic (complete)
+Chopin — Scherzo No.2 Op.31
+Rachmaninoff — Piano Concerto No.2 (1st movement)
+Rachmaninoff — Piano Concerto No.3 (1st movement)
+Rachmaninoff — Sonata No.2 Op.36
+Ravel — Gaspard de la Nuit
+Prokofiev — Sonata No.7 (War Sonata)
+Prokofiev — Toccata Op.11
+Scriabin — Sonata No.5 Op.53
+Scriabin — Etude Op.8 No.12
+Liszt — La Campanella
+Liszt — Hungarian Rhapsody No.2 (full speed, full version)
+Liszt — Transcendental Etude No.4 (Mazeppa)
+Liszt — Transcendental Etude No.5 (Feux Follets)
+Liszt — Transcendental Etude No.10
+Liszt — Transcendental Etude No.12 (Chasse-Neige)
+Liszt — Années de Pèlerinage Book 1 (complete)
+Liszt — Sonata in B minor
+Brahms — Piano Concerto No.2 (1st movement)
+Brahms — Paganini Variations Op.35
+User import slot — no restrictions
+PenguinMIDI import — master-level arrangements
+Unlock reward: "...Not bad." — the only compliment the teacher ever gives.
+
+---
+
+## PLUGIN 9 — PENGUINCHOP
+
+### What it does
+Full sample chopper and pad instrument. Load or record a sample, chop it using multiple modes (all snapping to zero crossings for clean cuts), arrange slices on a flexible pad grid, play via MIDI, export to MPC2 and any DAW.
+
+### Form
+VST2 + VST3
+
+### Getting Audio In
+- Drag and drop WAV/AIFF/MP3 from disk
+- Built-in file browser
+- PenguinFind integration — load directly from search
+- Recent files list
+- Record directly — captures from DAW input or track
+- Auto-trims silence from recorded audio
+
+### Waveform Display
+- Large waveform view across top
+- Zoom in/out
+- Slice markers as vertical coloured lines per mode
+- Click between markers to preview slice
+- Drag markers to adjust position
+- Right click to delete marker
+- Click empty space to add manual marker
+
+### Chop Modes (all snap to nearest zero crossing)
+- Zero Crossing — slices at zero amplitude points, minimum slice length control
+- Transient Detection — slices at attack peaks, sensitivity + pre-roll control
+- Equal Division — 4, 8, 16, 32, 64 equal slices
+- Bar/Beat Division — uses suite BPM, slice per bar/beat/1/8/1/16
+- Manual Tap — hit CHOP button by feel while sample plays, snaps to zero crossing
+- Smart Chop (AI) — local LLM finds most musical moments, choose how many slices
+
+### Manual Tap / CHOP Button
+- Play sample, tap CHOP button by feel when you hear a good chop point
+- Marker placed at tap point, auto-snapped to nearest zero crossing
+- Snap range: Tight (5ms) / Normal (20ms) / Loose (50ms)
+- Quantize taps — snap to nearest beat after the fact
+- Undo last tap button
+- Human reaction time compensation — slight pre-roll correction
+
+### Flexible Pad Grid
+- One pad per slice, up to 64 pads
+- Mini waveform shown per pad
+- MIDI note mapping shown per pad
+
+### Per Pad Controls
+- Volume, Pan, Pitch (±24 semitones), Fine tune (±100 cents)
+- Reverse, Loop, One shot toggles
+- Start trim, End trim
+- Fade in, Fade out
+- Mute, Solo
+- Choke groups
+- Round robin
+- Randomize
+
+### MIDI Mapping
+- Default: pad 1 = C2, pad 2 = C#2 (MPC style)
+- Customise any pad to any note
+- Velocity sensitive
+- Velocity to pitch option
+- MIDI learn
+
+### MPC2 Export
+- Export numbered WAV files: slice_01.wav, slice_02.wav etc
+- Export MIDI map file
+- Export as MPC program file if format supported
+- One click "Export to MPC2" button
+- Opens export folder automatically
+
+### Other Export
+- Individual slice WAV files
+- Single WAV with slice markers embedded
+- MIDI pattern playing all slices in order
+- Drag individual pad to DAW track
+- Drag all pads to DAW browser
+
+### PenguinSplit Integration
+- "Split first" button — sends to PenguinSplit, stem returns automatically
+- Full pipeline: load track → split → choose stem → chop → map → export
+
+---
+
+## PLUGIN 10 — PENGUINMASTER
+
+### What it does
+AI-assisted mastering chain plugin. Takes a finished mix, analyses it, suggests and applies a genre-appropriate mastering chain. One-click mastering that actually sounds good.
+
+### Form
+VST2 + VST3
+Uses PenguinFX modules under the hood
+
+### Features
+- AI analyses the mix — frequency balance, dynamics, loudness
+- Suggests mastering chain based on genre
+- Genre presets: Boom Bap, House, Pop, D&B
+- One-click apply
+- Full manual control of every stage after auto-apply
+- Local LLM handles analysis — no cloud cost
+- Stages: EQ → Compression → Stereo imaging → Limiter → Loudness meter
+- LUFS target control — streaming platform presets (Spotify, Apple Music, YouTube)
+
+---
+
+## PLUGIN 11 — PENGUINSTEREO
+
+### What it does
+Full professional stereo processing plugin. Mid/side EQ, multiband width control, vectorscope, correlation meter, phase tools. Competes with Brainworx and ISOL8. Used standalone and as the stereo stage inside PenguinMaster.
+
+### Form
+VST2 + VST3
+
+### Mid/Side Processing
+- Mid EQ — independent EQ on centre signal
+- Side EQ — independent EQ on stereo information
+- Mid/Side volume control
+- Mid solo, Side solo
+- Phase flip Mid or Side independently
+
+### Multiband Width Control
+- Per-band width slider: Sub, Low, Low-mid, High-mid, High
+- Per-band solo
+- Crossover frequency control between bands
+- Visual display showing width per band
+- Sub always mono recommended — auto-suggest per genre
+
+### Mono Maker
+- Force everything below set frequency to mono
+- Crossover frequency control
+- Essential for club compatibility
+- Auto-suggest frequency based on genre
+
+### Stereo Widener
+- Global width control
+- Frequency-dependent widening
+- Delay-based widening (Haas effect)
+- Mono compatible toggle — checks correlation while widening
+
+### Vectorscope
+- Classic Lissajous display — real-time stereo field
+- Narrow diagonal = mono, wide circle = stereo, horizontal = phase problems
+- Colour coded: green = safe, yellow = caution, red = phase issues
+
+### Correlation Meter
+- +1 = mono compatible, 0 = very wide, -1 = phase cancellation
+- Warning when correlation drops below safe threshold
+
+### Stereo Analyser
+- Real-time L, R, Mid, Side energy display
+- Balance meter — L vs R
+- Width meter
+- Historical graph
+
+### Mid/Side EQ
+- Full parametric, up to 8 bands per channel
+- Bell, shelf, notch, HPF, LPF per band
+- Link Mid and Side bands optionally
+- Visual frequency display showing both channels
+
+### Phase Tools
+- Phase flip L or R independently
+- Phase flip Mid or Side
+- Phase rotation 0-360 degrees
+- Polarity inversion
+- Phase correlation history
+
+### Presets
+- Tighten Sub, Club Ready, Podcast/Voice, Wide Master, Drum Bus
+- User save/load
+
+### PenguinMaster Integration
+- Stereo imaging stage in PenguinMaster uses PenguinStereo under the hood
+- Full plugin opens if PenguinStereo is installed
+- Simplified version used if not installed
+
+---
+
+## PLUGIN 12 — PENGUINKICK
+
+### What it does
+Kick drum designer VST. Synthesize kicks from scratch, layer with samples, or combine both. Simple 6-knob interface for instant results, advanced view for full control. Techno-focused but covers all genres.
+
+### Form
+VST2 + VST3
+
+### Two Modes
+- Simple view — 6 knobs, sounds great immediately
+- Advanced view — full synthesis control, toggle between views
+
+### Simple View — 6 Knobs
+- PUNCH — low frequency impact and transient weight
+- TONE — fundamental frequency and pitch envelope speed
+- CLICK — attack transient character and intensity
+- LENGTH — body decay and tail sustain
+- RUMBLE — sub frequency weight (20-50hz), chest-moving presence
+- DUCK — automatic sidechain ducking on kick hit, pump feel
+
+### Generation Modes
+- Synthesized — pure synthesis, no samples needed
+- Sample + synthesis hybrid — load sample as base, layer synthesis on top
+- Both modes available, switchable per preset
+
+### Advanced View — Body Section
+- Oscillator type: Sine, Triangle, custom draw
+- Pitch start frequency (Hz)
+- Pitch end frequency (Hz)
+- Pitch curve: exponential, linear, logarithmic
+- Pitch decay time (ms)
+- Visual pitch curve editor — draw exact drop shape, multiple breakpoints
+- Body distortion type + amount
+- Body volume
+
+### Advanced View — Click Section
+- Click type: Sine, Noise, Distorted noise, Sample
+- Click frequency
+- Click decay (ms)
+- Click filter HPF frequency
+- Click volume
+- Click distortion
+
+### Advanced View — Sub Section
+- Pure sine sub oscillator
+- Sub frequency — locked to body or independent
+- Sub decay
+- Sub volume
+- Sub filter
+
+### Advanced View — Rumble Section
+- Rumble frequency: 20-50hz range
+- Rumble decay: 500ms to 2 seconds
+- Rumble curve control
+- Rumble distortion — adds harmonics for translation on small speakers
+- Rumble HPF — protects speakers below 20hz
+- Rumble volume
+
+### Advanced View — Duck Section
+- Duck amount (db)
+- Duck attack (ms) — usually 1-5ms
+- Duck release (ms) — synced to BPM (1/4, 1/8 note)
+- Duck curve: exponential, linear
+- Frequency selective ducking — duck low-mids, leave highs
+- Sidechain output — triggers PenguinFX sidechain compressor automatically
+
+### Advanced View — Noise/Dirt Section
+- Background noise layer: vinyl crackle, tape hiss, room tone
+- Decay and volume
+- Adds analogue character
+
+### Advanced View — Amplitude Envelope
+- Attack, Hold, Decay
+- Visual envelope display
+
+### Advanced View — Distortion/Processing
+- Pre and post distortion
+- Types: soft clip, hard clip, tape, tube, foldback
+- Oversampling toggle
+
+### Advanced View — Layering
+- Up to 3 independent layers
+- Each layer: synthesis or sample
+- Per layer: volume, pan, pitch offset
+
+### Advanced View — Extras
+- Pitch modulation — subtle analogue wobble, rate + depth
+- Transient shaper — sharpen/soften attack post-synthesis
+- Built-in compression — one-knob glue
+- Sidechain output — dedicated signal for external sidechain routing
+
+### Techno Presets
+- Classic Berghain — deep, long, heavy sub
+- Drumcode — punchy, distorted, loud
+- Afterlife — melodic, tonal, musical pitch
+- Industrial — short, hard, aggressive click
+- Minimal — clean, simple, no frills
+- Acid Techno — distorted, gritty
+- Peak Time — maximum punch, maximum sub
+
+### Other Genre Presets
+- Boom Bap — punchy mid kick, short
+- House — classic 909 inspired
+- D&B — short, snappy, high pitched
+- Pop — clean, polished
+- User save/load
+
+PenguinBackup — dropped. Too complex:
+- Every plugin uses custom installers writing to random registry locations
+- VST2 license/DRM tied to machine ID — breaks on reinstall
+- Would need to test in every DAW (Ableton, FL, Logic, Cubase, MPC2 etc)
+- Each DAW costs money to license for testing
+- Plugin industry has no standard for backup/restore
+
+---
+
+## HOW TO START A CLAUDE CODE SESSION
+
+1. Open Claude Code in the penguin-suite root directory
+2. Say: "Read MASTER_CONTEXT.txt then let's work on [plugin name]"
+3. Claude Code will know the entire project
+4. For deep work on one plugin add: "Focus only on [plugin name] today"
+
+## SUPERPOWERS PLUGIN
+Superpowers is installed in Claude Code.
+Start brainstorm/planning sessions with: /plugin superpowers brainstorm
+It enforces: brainstorm → plan → isolated branches → review
+
+## MCP TUNNEL (PLANNED)
+A local MCP server + ngrok/Cloudflare tunnel is planned to allow remote access to Claude Code from mobile. Build this early — it enables working on the suite from anywhere. This replaces the need for Claude Max Remote Control ($100-200/month).
+
+---
+
+## NOTES & DECISIONS LOG
+
+- VST2 included for MPC2 — Akai has been slow to add VST3 support
+- Key shifting in PenguinDJ avoided unless absolutely no alternative
+- PenguinVoice AI pitch correction is OFF by default — never automatic
+- PenguinFind searches toggled independently — local search off by default to avoid constant rescanning
+- Salamander Grand Piano chosen for PenguinMIDI and PenguinSynthesia — free, open source, ~800mb, sounds genuinely good
+- Local LLM handles all real-time AI features — Claude only called for deep explanations on demand (saves tokens)
+- PenguinSplit GPU-first (RTX 3060 baseline) — CPU fallback automatic
+- Monorepo: one Claude Project = whole suite stays on same page
+- Each package gets own Docker when development starts — not upfront
+
+---
+
+END OF MASTER CONTEXT FILE
+🐧 Penguin Suite — Built on Holiday

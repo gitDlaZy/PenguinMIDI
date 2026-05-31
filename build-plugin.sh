@@ -10,8 +10,8 @@ MSBUILD_EXE="/mnt/c/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/
 
 VST2_OUT="$BUILD_DIR/PenguinLFO_artefacts/Release/VST/PenguinLFO.dll"
 VST3_OUT="$BUILD_DIR/PenguinLFO_artefacts/Release/VST3/PenguinLFO.vst3"
-VST2_DEST="/mnt/c/Users/DlaZy/Documents/VST Plugins/PenguinLFO.dll"
-VST3_DEST="/mnt/c/Users/DlaZy/Documents/VST3 Plugins/PenguinLFO.vst3"
+VST2_DEST="/mnt/c/Program Files/Steinberg/vstplugins/PenguinLFO.dll"
+VST3_DEST="/mnt/c/Program Files/Common Files/VST3/PenguinLFO.vst3"
 
 echo "==> Configuring (cmake)..."
 WIN_PLUGIN_DIR="$(wslpath -w "$PLUGIN_DIR")"
@@ -20,15 +20,15 @@ WIN_BUILD_DIR="$(wslpath -w "$BUILD_DIR")"
 
 echo "==> Building (MSBuild Release)..."
 WIN_SLN="$(wslpath -w "$BUILD_DIR/PenguinLFO.sln")"
-"$MSBUILD_EXE" "$WIN_SLN" -p:Configuration=Release -p:Platform=x64 -m -nologo -v:minimal
-
-echo "==> Copying VST2..."
-cp "$VST2_OUT" "$VST2_DEST"
-echo "    -> $VST2_DEST"
-
-echo "==> Copying VST3..."
-cp -r "$VST3_OUT" "$VST3_DEST"
-echo "    -> $VST3_DEST"
+"$MSBUILD_EXE" "$WIN_SLN" /t:Rebuild -p:Configuration=Release -p:Platform=x64 -m -nologo -v:minimal
 
 echo ""
-echo "Done. Rescan plugins in MPC 2."
+echo "Build complete. Copy the plugin manually:"
+echo ""
+echo "  VST2: $(wslpath -w "$VST2_OUT")"
+echo "   ->   C:\\Program Files\\Steinberg\\vstplugins\\PenguinLFO.dll"
+echo ""
+echo "  VST3: $(wslpath -w "$VST3_OUT")"
+echo "   ->   C:\\Program Files\\Common Files\\VST3\\PenguinLFO.vst3"
+echo ""
+echo "Then rescan plugins in MPC 2."
