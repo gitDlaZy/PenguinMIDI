@@ -1067,6 +1067,26 @@
   <div>PROTOTYPE · NOT FOR DAW USE YET</div>
 </footer>
 
+<!-- ── KEYBOARD MODAL ── -->
+<div id="kb-modal">
+  <div id="kb-header">
+    <div>
+      <span class="kb-title">🎹 Click a key to audition · then click an empty cell to place it</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span class="kb-selected" id="kb-selected-note">—</span>
+      <button id="kb-close">✕ Close</button>
+    </div>
+  </div>
+  <div id="kb-keys"></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
+    <div id="kb-hint">Touch or click keys to hear · selected note places on next cell click</div>
+    <button id="kb-step-toggle" style="background:transparent;border:1px solid #333;color:#555;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:11px;letter-spacing:1px;font-family:'DM Mono',monospace;">⏺ STEP REC OFF</button>
+    <button id="kb-blank" style="background:transparent;border:1px solid #333;color:#555;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:11px;letter-spacing:1px;font-family:'DM Mono',monospace;" title="Place a rest and advance">— REST</button>
+    <span style="font-size:10px;color:#333;" id="kb-step-pos">Bar 1 · Cell 1</span>
+  </div>
+</div>
+
 <script>
 // ─── JUCE BRIDGE ─────────────────────────────────────────────────────────────
 const _jucePromises = new Map();
@@ -2503,23 +2523,8 @@ function _kbUpdateStepPos() {
     `Bar ${_kbStepBar + 1} · Cell ${_kbStepCell + 1}`;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('kb-step-toggle').addEventListener('click', () => {
-    _kbStepRec = !_kbStepRec;
-    _kbStepBar = 0; _kbStepCell = 0;
-    const btn = document.getElementById('kb-step-toggle');
-    if (_kbStepRec) {
-      btn.textContent = '⏺ STEP REC ON';
-      btn.style.color = '#ff6b6b'; btn.style.borderColor = '#ff6b6b';
-    } else {
-      btn.textContent = '⏺ STEP REC OFF';
-      btn.style.color = '#555'; btn.style.borderColor = '#333';
-    }
-    _kbUpdateStepPos();
-  });
-});
 
-(function buildKeyboard() {
+function buildKeyboard() {
   const container = document.getElementById('kb-keys');
   // C2 to B5: 4 octaves
   const startOctave = 2, endOctave = 5;
@@ -2585,7 +2590,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!el) return;
     kbPlayNote(parseInt(el.dataset.midi), el.dataset.name, el);
   });
-})();
+}
 
 function kbStepAdvance() {
   const noteDiv = state.noteDiv;
@@ -2700,25 +2705,21 @@ _initBridge();
 buildKeyScalePanel();
 renderDrums();
 render();
+buildKeyboard();
+
+document.getElementById('kb-step-toggle').addEventListener('click', () => {
+  _kbStepRec = !_kbStepRec;
+  _kbStepBar = 0; _kbStepCell = 0;
+  const btn = document.getElementById('kb-step-toggle');
+  if (_kbStepRec) {
+    btn.textContent = '⏺ STEP REC ON';
+    btn.style.color = '#ff6b6b'; btn.style.borderColor = '#ff6b6b';
+  } else {
+    btn.textContent = '⏺ STEP REC OFF';
+    btn.style.color = '#555'; btn.style.borderColor = '#333';
+  }
+  _kbUpdateStepPos();
+});
 </script>
-<!-- ── KEYBOARD MODAL ── -->
-<div id="kb-modal">
-  <div id="kb-header">
-    <div>
-      <span class="kb-title">🎹 Keyboard — click a key, then click an empty cell to place it</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:16px;">
-      <span class="kb-selected" id="kb-selected-note">—</span>
-      <button id="kb-close">✕ Close</button>
-    </div>
-  </div>
-  <div id="kb-keys"></div>
-  <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
-    <div id="kb-hint">Touch or click keys · Selected note places on next cell click</div>
-    <button id="kb-step-toggle" style="background:transparent;border:1px solid #333;color:#555;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:11px;letter-spacing:1px;font-family:'DM Mono',monospace;">⏺ STEP REC OFF</button>
-    <button id="kb-blank" style="background:transparent;border:1px solid #333;color:#555;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:11px;letter-spacing:1px;font-family:'DM Mono',monospace;" title="Place a rest (blank) and advance">— REST</button>
-    <span style="font-size:10px;color:#333;" id="kb-step-pos">Bar 1 · Cell 1</span>
-  </div>
-</div>
 </body>
 </html>
