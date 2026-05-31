@@ -531,6 +531,7 @@
   .drum-pill[data-style="pop"].active      { background: #e8ff47; border-color: #e8ff47; color: #000; }
   .drum-pill[data-style="dnb"].active      { background: #c084fc; border-color: #c084fc; color: #000; }
   .drum-pill[data-style="techno"].active   { background: #f5f5f5; border-color: #f5f5f5; color: #000; }
+  .drum-pill[data-style="dubstep"].active  { background: #f97316; border-color: #f97316; color: #000; }
 
   .drum-controls {
     display: flex;
@@ -908,6 +909,7 @@
   <div class="actions">
     <div style="display:flex;align-items:center;gap:14px;">
       <button class="btn btn-play" id="btn-play">▶ Play</button>
+      <button class="btn btn-secondary" id="btn-metro" style="border-color:#555;color:#555;">🎵 Metro</button>
       <div class="drum-vol-wrap" style="display:flex;align-items:center;gap:8px;color:#aaa;font-size:12px;letter-spacing:1px;">
         VOL <input type="range" id="master-vol" min="0" max="100" value="80" style="width:90px;">
         <span id="master-vol-val" style="color:#aaa;font-size:11px;width:28px;">80%</span>
@@ -958,6 +960,7 @@
           <button class="drum-pill" id="dpill-pop" data-style="pop">Pop</button>
           <button class="drum-pill" id="dpill-dnb" data-style="dnb">D&amp;B</button>
           <button class="drum-pill" id="dpill-techno" data-style="techno">Techno</button>
+          <button class="drum-pill" id="dpill-dubstep" data-style="dubstep">Dubstep</button>
         </div>
       </div>
       <div class="drum-header-row">
@@ -1130,6 +1133,13 @@ const DRUM_PATTERNS = {
     hat:   [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1],
     open:  [0,0,0,0, 0,0,0,1, 0,0,0,0, 0,0,0,1],
     clap:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+  },
+  dubstep: {
+    kick:  [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0],
+    snare: [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,1],
+    hat:   [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0],
+    open:  [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+    clap:  [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
   },
 };
 
@@ -1345,7 +1355,7 @@ document.getElementById('drum-rows').addEventListener('click', (e) => {
   handleDrumTap(c.dataset.key, parseInt(c.dataset.step));
 });
 
-const STYLE_BPM = { boombap: 96, house: 128, pop: 118, dnb: 174, techno: 138 };
+const STYLE_BPM = { boombap: 96, house: 128, pop: 118, dnb: 174, techno: 138, dubstep: 140 };
 
 function loadDrumStyle(style) {
   drumState.style = style;
@@ -2328,6 +2338,54 @@ document.getElementById('drum-regen').addEventListener('click', () => {
 });
 
 document.getElementById('drum-save-preset').addEventListener('click', openSavePresetDialog);
+
+// ─── METRONOME ────────────────────────────────────────────────────────────────
+let _metroEnabled = false;
+let _metroInterval = null;
+
+function _metroClick(accent) {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const g   = ctx.createGain();
+  osc.connect(g); g.connect(ctx.destination);
+  osc.frequency.value = accent ? 1200 : 800;
+  g.gain.setValueAtTime(0.25, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.06);
+}
+
+function _startMetro() {
+  let beat = 0;
+  const tick = () => {
+    const bpm = parseInt(document.getElementById('bpm').value) || 120;
+    _metroClick(beat % 4 === 0);
+    beat++;
+    _metroInterval = setTimeout(tick, (60000 / bpm));
+  };
+  tick();
+}
+
+function _stopMetro() {
+  clearTimeout(_metroInterval);
+  _metroInterval = null;
+}
+
+document.getElementById('btn-metro').addEventListener('click', () => {
+  _metroEnabled = !_metroEnabled;
+  const btn = document.getElementById('btn-metro');
+  if (_metroEnabled) {
+    _startMetro();
+    btn.style.borderColor = '#22c55e';
+    btn.style.color       = '#22c55e';
+    btn.textContent       = '🎵 Metro ON';
+  } else {
+    _stopMetro();
+    btn.style.borderColor = '#555';
+    btn.style.color       = '#555';
+    btn.textContent       = '🎵 Metro';
+  }
+});
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 _initBridge();
