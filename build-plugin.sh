@@ -2,7 +2,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_DIR="$SCRIPT_DIR/src/penguin-lfo"
+PLUGIN_DIR="$SCRIPT_DIR/packages/penguin-lfo"
 BUILD_DIR="$PLUGIN_DIR/build"
 
 CMAKE_EXE="/mnt/c/Program Files/CMake/bin/cmake.exe"
