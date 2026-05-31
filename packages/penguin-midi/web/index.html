@@ -2649,7 +2649,11 @@ function renderExtraTracks() {
         e.stopPropagation();
         const t = parseInt(btn.dataset.ti);
         if (btn.dataset.action === 'gen') {
-          for (let b = 0; b < 4; b++) generateTrackBar(t, b);
+          const activeBars = getActiveBars();
+          for (let b = 0; b < 4; b++) {
+            if (b < activeBars) generateTrackBar(t, b);
+            else trackState[t].bars[b] = new Array(trackState[t].noteDiv === -1 ? 2 : Math.max(trackState[t].noteDiv, 1)).fill(null);
+          }
           renderExtraTracks();
         } else {
           trackState[t].bars = Array(4).fill(null).map(() => new Array(trackState[t].noteDiv).fill(null));
