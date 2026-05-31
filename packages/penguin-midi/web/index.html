@@ -922,6 +922,8 @@
     </div>
     <div class="actions-row">
       <button class="btn btn-secondary" id="btn-save-pattern">💾 Patterns</button>
+      <button class="btn btn-secondary" id="btn-save-midi" style="background:#1a1a2a;border-color:#7ec8e3;color:#7ec8e3;">💾 Save MIDI</button>
+      <button class="btn btn-secondary" id="btn-save-drums" style="background:#2a1a1a;border-color:#ff6b6b;color:#ff6b6b;">💾 Save Drums</button>
       <button class="btn btn-secondary" id="btn-save-global" style="background:#1a2a1a;border-color:#22c55e;color:#22c55e;">💾 Save All</button>
     </div>
   </div>
@@ -1037,38 +1039,57 @@ async function _initBridge() {
   }
 }
 
-function saveSession() {
-  const session = {
+function saveMidi() {
+  if (window.__JUCE__) return;
+  localStorage.setItem('penguinMidi', JSON.stringify({
     bars: state.bars,
     noteDiv: state.noteDiv,
-    drumPattern: drumState.pattern,
-    drumStyle: drumState.style,
-    drumVolume: drumState.volume,
     bpm: parseInt(document.getElementById('bpm').value) || 120,
     key: document.getElementById('key-select').value,
     scale: document.getElementById('scale-select').value,
-  };
-  if (!window.__JUCE__)
-    localStorage.setItem('penguinSession', JSON.stringify(session));
-  setStatus('Saved ✓', 'active');
+  }));
+  setStatus('MIDI saved ✓', 'active');
+  setTimeout(() => setStatus('Ready', 'idle'), 1500);
+}
+
+function saveDrums() {
+  if (window.__JUCE__) return;
+  localStorage.setItem('penguinDrums', JSON.stringify({
+    pattern: drumState.pattern,
+    style:   drumState.style,
+    volume:  drumState.volume,
+  }));
+  setStatus('Drums saved ✓', 'active');
+  setTimeout(() => setStatus('Ready', 'idle'), 1500);
+}
+
+function saveSession() {
+  saveMidi();
+  saveDrums();
+  setStatus('All saved ✓', 'active');
   setTimeout(() => setStatus('Ready', 'idle'), 1500);
 }
 
 function _loadSession() {
   try {
-    const raw = localStorage.getItem('penguinSession');
-    if (!raw) return;
-    const s = JSON.parse(raw);
-    if (s.bars)        state.bars = s.bars;
-    if (s.noteDiv)     state.noteDiv = s.noteDiv;
-    if (s.drumPattern) drumState.pattern = s.drumPattern;
-    if (s.drumStyle)   drumState.style = s.drumStyle;
-    if (s.drumVolume)  drumState.volume = s.drumVolume;
-    if (s.bpm)         document.getElementById('bpm').value = s.bpm;
-    if (s.key)         document.getElementById('key-select').value = s.key;
-    if (s.scale)       document.getElementById('scale-select').value = s.scale;
-    document.querySelectorAll('#note-length .pill').forEach(p =>
-      p.classList.toggle('active', parseInt(p.dataset.val) === state.noteDiv));
+    const m = JSON.parse(localStorage.getItem('penguinMidi') || 'null');
+    if (m) {
+      if (m.bars)    state.bars = m.bars;
+      if (m.noteDiv) state.noteDiv = m.noteDiv;
+      if (m.bpm)     document.getElementById('bpm').value = m.bpm;
+      if (m.key)     document.getElementById('key-select').value = m.key;
+      if (m.scale)   document.getElementById('scale-select').value = m.scale;
+      document.querySelectorAll('#note-length .pill').forEach(p =>
+        p.classList.toggle('active', parseInt(p.dataset.val) === state.noteDiv));
+    }
+  } catch(e) {}
+  try {
+    const d = JSON.parse(localStorage.getItem('penguinDrums') || 'null');
+    if (d) {
+      if (d.pattern) drumState.pattern = d.pattern;
+      if (d.style)   drumState.style   = d.style;
+      if (d.volume)  drumState.volume  = d.volume;
+    }
   } catch(e) {}
 }
 
@@ -1288,7 +1309,7 @@ function renderDrums() {
     clearBtn.addEventListener('click', () => {
       drumState.pattern[key] = new Array(16).fill(0);
       renderDrums();
-      saveSession();
+      saveDrums();
     });
     clearBtn.addEventListener('mouseover', () => { clearBtn.style.color = '#ff6b6b'; clearBtn.style.borderColor = '#ff6b6b'; });
     clearBtn.addEventListener('mouseout',  () => { clearBtn.style.color = '#555';    clearBtn.style.borderColor = '#333'; });
@@ -1305,7 +1326,7 @@ function handleDrumTap(key, step) {
   _drumProcessing = true;
   drumState.pattern[key][step] = drumState.pattern[key][step] ? 0 : 1;
   renderDrums();
-  saveSession();
+  saveDrums();
   setTimeout(() => { _drumProcessing = false; }, 300);
 }
 
@@ -1336,7 +1357,7 @@ function loadDrumStyle(style) {
   document.querySelectorAll('#drum-style-pills .drum-pill').forEach(p => {
     p.classList.toggle('active', p.dataset.style === style);
   });
-  saveSession();
+  saveDrums();
 }
 
 // ─── DRUM SYNTHESIS ───────────────────────────────────────────────────────────
@@ -1852,13 +1873,13 @@ function generateBar(barIndex) {
 function generateAll() {
   for (let b = 0; b < 4; b++) generateBar(b);
   setStatus('All bars generated ✓', 'active');
-  saveSession();
+  saveMidi();
 }
 
 function clearBar(barIndex) {
   state.bars[barIndex] = new Array(state.noteDiv).fill(null);
   render();
-  saveSession();
+  saveMidi();
 }
 
 function clearAll() {
@@ -2242,6 +2263,8 @@ for (let i = 0; i < 80; i++) {
 
 // ─── BUTTON WIRING ────────────────────────────────────────────────────────────
 document.getElementById('btn-generate').addEventListener('click', generateAll);
+document.getElementById('btn-save-midi').addEventListener('click', saveMidi);
+document.getElementById('btn-save-drums').addEventListener('click', saveDrums);
 document.getElementById('btn-save-global').addEventListener('click', saveSession);
 const _patternTap = ('ontouchstart' in window) ? 'touchend' : 'click';
 document.getElementById('btn-save-pattern').addEventListener(_patternTap, (e) => {
