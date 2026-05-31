@@ -2263,7 +2263,12 @@ for (let i = 0; i < 80; i++) {
 
 // ─── BUTTON WIRING ────────────────────────────────────────────────────────────
 document.getElementById('btn-generate').addEventListener('click', generateAll);
-document.getElementById('btn-save-midi').addEventListener('click', saveMidi);
+document.getElementById('btn-save-midi').addEventListener('click', () => {
+  const panel = document.getElementById('pattern-panel');
+  panel.style.display = 'block';
+  renderPatternList();
+  setTimeout(() => document.getElementById('pattern-name-input').focus(), 50);
+});
 document.getElementById('btn-save-drums').addEventListener('click', saveDrums);
 document.getElementById('btn-save-global').addEventListener('click', saveSession);
 const _patternTap = ('ontouchstart' in window) ? 'touchend' : 'click';
