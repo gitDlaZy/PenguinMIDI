@@ -1359,10 +1359,30 @@ function renderDrums() {
     }
     row.appendChild(cells);
 
+    const btnStyle = 'margin-left:4px;background:transparent;border:1px solid #333;color:#555;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;flex-shrink:0;';
+
+    const rotLBtn = document.createElement('button');
+    rotLBtn.textContent = '◀';
+    rotLBtn.title = `Shift ${label} left`;
+    rotLBtn.style.cssText = 'margin-left:8px;' + btnStyle.slice(btnStyle.indexOf('background'));
+    rotLBtn.addEventListener('click', () => { rotateDrumRow(key, -1); });
+    rotLBtn.addEventListener('mouseover', () => { rotLBtn.style.color = '#7ec8e3'; rotLBtn.style.borderColor = '#7ec8e3'; });
+    rotLBtn.addEventListener('mouseout',  () => { rotLBtn.style.color = '#555';    rotLBtn.style.borderColor = '#333'; });
+    row.appendChild(rotLBtn);
+
+    const rotRBtn = document.createElement('button');
+    rotRBtn.textContent = '▶';
+    rotRBtn.title = `Shift ${label} right`;
+    rotRBtn.style.cssText = 'margin-left:2px;' + btnStyle.slice(btnStyle.indexOf('background'));
+    rotRBtn.addEventListener('click', () => { rotateDrumRow(key, 1); });
+    rotRBtn.addEventListener('mouseover', () => { rotRBtn.style.color = '#7ec8e3'; rotRBtn.style.borderColor = '#7ec8e3'; });
+    rotRBtn.addEventListener('mouseout',  () => { rotRBtn.style.color = '#555';    rotRBtn.style.borderColor = '#333'; });
+    row.appendChild(rotRBtn);
+
     const clearBtn = document.createElement('button');
     clearBtn.textContent = '✕';
     clearBtn.title = `Clear ${label}`;
-    clearBtn.style.cssText = 'margin-left:8px;background:transparent;border:1px solid #333;color:#555;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;flex-shrink:0;';
+    clearBtn.style.cssText = 'margin-left:4px;' + btnStyle.slice(btnStyle.indexOf('background'));
     clearBtn.addEventListener('click', () => {
       drumState.pattern[key] = new Array(16).fill(0);
       renderDrums();
@@ -1374,6 +1394,14 @@ function renderDrums() {
 
     container.appendChild(row);
   });
+}
+
+function rotateDrumRow(key, direction) {
+  const p = drumState.pattern[key];
+  if (direction === 1)  p.unshift(p.pop());   // rotate right
+  else                  p.push(p.shift());     // rotate left
+  renderDrums();
+  saveDrums();
 }
 
 // Single delegated listener — bulletproof for iPhone
