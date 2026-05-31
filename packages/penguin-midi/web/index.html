@@ -2145,17 +2145,20 @@ function startPlay() {
   // ── Extra instrument tracks ──
   state.trackIntervals = EXTRA_TRACKS.map((def, ti) => {
     const ts = trackState[ti];
-    const nd = ts.noteDiv;
-    const sMs = (60000 / bpm) / (nd / 4);
+    // nd: actual cells per bar. -1 = 2/1 (2 bars per step = 2 cells spanning all 4 bars)
+    const nd   = ts.noteDiv === -1 ? 2 : Math.max(ts.noteDiv, 1);
+    const barMs = (60000 / bpm) * 4; // one full bar in ms
+    const sMs  = ts.noteDiv === -1 ? barMs * 2 : barMs / nd;
     let pos = 0;
     return setInterval(() => {
       const activeBars = ts.bars.reduce((last, b, idx) => b.some(n => n !== null) ? idx + 1 : last, 1);
-      const bar = Math.floor(pos / nd) % activeBars;
+      const totalSteps = ts.noteDiv === -1 ? Math.ceil(activeBars / 2) : activeBars * nd;
+      const bar  = ts.noteDiv === -1 ? (pos * 2) % activeBars : Math.floor(pos / nd) % activeBars;
       const cell = pos % nd;
-      const note = ts.bars[bar][cell];
-      if (note) playTrackNote(def.preset, note.midi, ctx.currentTime, sMs / 1000 * 0.8);
+      const note = ts.bars[bar] && ts.bars[bar][cell];
+      if (note) playTrackNote(def.preset, note.midi, ctx.currentTime, sMs / 1000 * 0.88);
       pos++;
-      if (pos >= activeBars * nd) pos = 0;
+      if (pos >= totalSteps) pos = 0;
     }, sMs);
   });
 
@@ -2514,7 +2517,7 @@ document.getElementById('drum-save-preset').addEventListener('click', openSavePr
 const EXTRA_TRACKS = [
   { name: 'Bass',  preset: 'bass',  channel: 2, defaultNoteDiv: 8,  octaves: [1, 2, 3] },
   { name: 'Lead',  preset: 'lead',  channel: 3, defaultNoteDiv: 16, octaves: [3, 4, 5] },
-  { name: 'Pad',   preset: 'pad',   channel: 4, defaultNoteDiv: 4,  octaves: [3, 4]    },
+  { name: 'Pad',   preset: 'pad',   channel: 4, defaultNoteDiv: 1,  octaves: [3, 4]    },
   { name: 'Pluck', preset: 'pluck', channel: 5, defaultNoteDiv: 8,  octaves: [3, 4, 5] },
 ];
 
@@ -2554,8 +2557,8 @@ function playTrackNote(preset, midi, time, duration) {
     const freq = 440 * Math.pow(2, (midi - 69) / 12);
     const master = ctx.createGain(); master.connect(ctx.destination);
     master.gain.setValueAtTime(0, time);
-    master.gain.linearRampToValueAtTime(0.2 * vol, time + 0.35);
-    master.gain.exponentialRampToValueAtTime(0.001, time + duration + 0.9);
+    master.gain.linearRampToValueAtTime(0.2 * vol, time + 0.5);
+    master.gain.exponentialRampToValueAtTime(0.001, time + duration + 1.5);
     [-8, 0, 8].forEach(dt => {
       const osc = ctx.createOscillator(), g = ctx.createGain();
       osc.connect(g); g.connect(master);
@@ -2658,19 +2661,27 @@ function renderExtraTracks() {
       const ndRow = document.createElement('div');
       ndRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:10px;';
       ndRow.innerHTML = `<span style="font-size:10px;color:#444;letter-spacing:2px;">DIV</span>`;
-      [4, 8, 16].forEach(val => {
+      const DIV_OPTIONS = [
+        { val: 16, label: '1/16' },
+        { val: 8,  label: '1/8'  },
+        { val: 4,  label: '1/4'  },
+        { val: 2,  label: '1/2'  },
+        { val: 1,  label: '1/1'  },
+        { val: -1, label: '2/1'  },
+      ];
+      DIV_OPTIONS.forEach(({ val, label }) => {
         const btn = document.createElement('button');
         btn.className = 'pill' + (ts.noteDiv === val ? ' active' : '');
-        btn.textContent = val === 4 ? '1/4' : val === 8 ? '1/8' : '1/16';
+        btn.textContent = label;
         btn.dataset.val = val;
         btn.style.cssText = 'font-size:11px;padding:3px 10px;';
         btn.addEventListener('click', () => {
-          const old = ts.noteDiv;
+          const old = Math.max(ts.noteDiv, 1);
           ts.noteDiv = val;
-          // Resize each bar
+          const cells = val === -1 ? 2 : Math.max(val, 1);
           for (let b = 0; b < 4; b++) {
-            if (val > old) while (ts.bars[b].length < val) ts.bars[b].push(null);
-            else ts.bars[b] = ts.bars[b].slice(0, val);
+            if (cells > old) while (ts.bars[b].length < cells) ts.bars[b].push(null);
+            else ts.bars[b] = ts.bars[b].slice(0, cells);
           }
           renderExtraTracks();
         });
@@ -2681,7 +2692,7 @@ function renderExtraTracks() {
       for (let b = 0; b < 4; b++) {
         const barWrap = document.createElement('div');
         barWrap.className = 'bar-wrap';
-        const nd = ts.noteDiv;
+        const nd = ts.noteDiv === -1 ? 2 : Math.max(ts.noteDiv, 1);
         barWrap.innerHTML = `
           <div class="bar-header">
             <div class="bar-title">Bar ${b+1}</div>
