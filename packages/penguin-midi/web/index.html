@@ -1186,6 +1186,15 @@ function saveSession() {
   setTimeout(() => setStatus('Ready', 'idle'), 1500);
 }
 
+// Clear stale localStorage when defaults change
+const _SESSION_VER = '3';
+if (localStorage.getItem('penguinVer') !== _SESSION_VER) {
+  localStorage.removeItem('penguinMidi');
+  localStorage.removeItem('penguinDrums');
+  localStorage.removeItem('penguinSession');
+  localStorage.setItem('penguinVer', _SESSION_VER);
+}
+
 function _loadSession() {
   try {
     const m = JSON.parse(localStorage.getItem('penguinMidi') || 'null');
