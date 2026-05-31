@@ -3,8 +3,7 @@ name: Deploy PenguinMIDI UI to GitHub Pages
 on:
   push:
     branches: [master]
-    paths:
-      - packages/penguin-midi/web/**
+  workflow_dispatch:
 
 permissions:
   contents: read
