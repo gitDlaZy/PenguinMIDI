@@ -1004,8 +1004,8 @@
       <div class="drum-header-row">
         <div class="drum-title">🥁 Drum Machine</div>
         <div class="drum-style-pills" id="drum-style-pills">
-          <button class="drum-pill active" id="dpill-boombap" data-style="boombap">Boom Bap</button>
-          <button class="drum-pill" id="dpill-house" data-style="house">House</button>
+          <button class="drum-pill" id="dpill-boombap" data-style="boombap">Boom Bap</button>
+          <button class="drum-pill active" id="dpill-house" data-style="house">House</button>
           <button class="drum-pill" id="dpill-pop" data-style="pop">Pop</button>
           <button class="drum-pill" id="dpill-dnb" data-style="dnb">D&amp;B</button>
           <button class="drum-pill" id="dpill-techno" data-style="techno">Techno</button>
@@ -1018,7 +1018,7 @@
             VOL <input type="range" id="drum-vol" min="0" max="100" value="70">
           </div>
           <div class="drum-vol-wrap">
-            BPM <input type="number" id="bpm" value="96" min="40" max="240" style="background:transparent;border:none;color:var(--accent);font-family:'DM Mono',monospace;font-size:13px;width:44px;outline:none;text-align:center;">
+            BPM <input type="number" id="bpm" value="128" min="40" max="240" style="background:transparent;border:none;color:var(--accent);font-family:'DM Mono',monospace;font-size:13px;width:44px;outline:none;text-align:center;">
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
@@ -1265,8 +1265,8 @@ const DRUM_ROWS = [
 ];
 
 let drumState = {
-  pattern: JSON.parse(JSON.stringify(DRUM_PATTERNS.boombap)),
-  style: 'boombap',
+  pattern: JSON.parse(JSON.stringify(DRUM_PATTERNS.house)),
+  style: 'house',
   enabled: true,
   volume: 0.7,
 };
