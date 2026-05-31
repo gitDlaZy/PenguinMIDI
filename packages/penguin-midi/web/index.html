@@ -275,6 +275,23 @@
   .btn-hum:hover { background: var(--accent2); color: var(--black); }
   .btn-hum.listening { background: var(--accent3); border-color: var(--accent3); color: var(--white); animation: pulse 1s infinite; }
 
+  /* ── Extra instrument tracks ── */
+  .track-block { margin-bottom: 12px; border: 1px solid #1e1e2e; border-radius: 8px; overflow: hidden; }
+  .track-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; background: #111118; cursor: pointer;
+    font-size: 11px; letter-spacing: 2px; color: #666; text-transform: uppercase;
+    user-select: none; transition: background 0.15s;
+  }
+  .track-header:hover { background: #1a1a2a; color: #aaa; }
+  .track-header.open { color: var(--accent); border-bottom: 1px solid #1e1e2e; }
+  .track-header .track-arrow { margin-right: 10px; font-size: 9px; }
+  .track-header .track-actions { display: flex; gap: 8px; }
+  .track-btn { background: transparent; border: 1px solid #2a2a38; color: #444; border-radius: 4px; padding: 3px 10px; cursor: pointer; font-size: 10px; letter-spacing: 1px; font-family: 'DM Mono', monospace; }
+  .track-btn:hover { border-color: #666; color: #aaa; }
+  .track-body { padding: 12px; background: #0d0d14; }
+  .track-bars { }
+
   .btn-play {
     background: #22c55e;
     color: #fff;
@@ -1020,6 +1037,9 @@
   <div class="section-label">4 Bars · 4/4</div>
   <div class="bars" id="bars"></div>
 
+  <!-- EXTRA INSTRUMENT TRACKS -->
+  <div id="extra-tracks"></div>
+
 </main>
 
 <!-- ── KEYBOARD MODAL ── -->
@@ -1101,6 +1121,7 @@ function _encodeShare() {
     sc: document.getElementById('scale-select').value,
     d: drumState.pattern,
     ds: drumState.style,
+    tr: trackState.map(t => t.bars),
   };
   return encodeURIComponent(JSON.stringify(s));
 }
@@ -1117,6 +1138,7 @@ function _loadFromUrl() {
     if (s.sc)  document.getElementById('scale-select').value   = s.sc;
     if (s.d)   drumState.pattern  = s.d;
     if (s.ds)  drumState.style    = s.ds;
+    if (s.tr)  s.tr.forEach((bars, ti) => { if (trackState[ti]) trackState[ti].bars = bars; });
     document.querySelectorAll('#note-length .pill').forEach(p =>
       p.classList.toggle('active', parseInt(p.dataset.val) === state.noteDiv));
     return true;
@@ -2120,6 +2142,23 @@ function startPlay() {
     if (state.playPos >= totalSteps) state.playPos = 0;
   }, stepMs);
 
+  // ── Extra instrument tracks ──
+  state.trackIntervals = EXTRA_TRACKS.map((def, ti) => {
+    const ts = trackState[ti];
+    const nd = ts.noteDiv;
+    const sMs = (60000 / bpm) / (nd / 4);
+    let pos = 0;
+    return setInterval(() => {
+      const activeBars = ts.bars.reduce((last, b, idx) => b.some(n => n !== null) ? idx + 1 : last, 1);
+      const bar = Math.floor(pos / nd) % activeBars;
+      const cell = pos % nd;
+      const note = ts.bars[bar][cell];
+      if (note) playTrackNote(def.preset, note.midi, ctx.currentTime, sMs / 1000 * 0.8);
+      pos++;
+      if (pos >= activeBars * nd) pos = 0;
+    }, sMs);
+  });
+
   // ── Drum sequencer (independent 16-step clock) ──
   let drumPos = 0;
   state.drumInterval = setInterval(() => {
@@ -2144,6 +2183,8 @@ function stopPlay() {
   state.isPlaying = false;
   clearInterval(state.playInterval);
   clearInterval(state.drumInterval);
+  (state.trackIntervals || []).forEach(id => clearInterval(id));
+  state.trackIntervals = [];
   document.getElementById('btn-play').textContent = '▶ Play';
   document.getElementById('btn-play').classList.remove('playing');
   document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing-cell'));
@@ -2469,6 +2510,184 @@ document.getElementById('drum-regen').addEventListener('click', () => {
 
 document.getElementById('drum-save-preset').addEventListener('click', openSavePresetDialog);
 
+// ─── EXTRA INSTRUMENT TRACKS ──────────────────────────────────────────────────
+const EXTRA_TRACKS = [
+  { name: 'Bass',  preset: 'bass',  channel: 2 },
+  { name: 'Lead',  preset: 'lead',  channel: 3 },
+  { name: 'Pad',   preset: 'pad',   channel: 4 },
+  { name: 'Pluck', preset: 'pluck', channel: 5 },
+];
+
+// Runtime state for each track (bars, open, noteDiv)
+const trackState = EXTRA_TRACKS.map(() => ({
+  bars: Array(4).fill(null).map(() => new Array(16).fill(null)),
+  noteDiv: 16,
+  open: false,
+}));
+
+function playTrackNote(preset, midi, time, duration) {
+  if (window.__JUCE__) {
+    const ch = { bass: 2, lead: 3, pad: 4, pluck: 5 }[preset] || 2;
+    jucePlayMidi(ch, midi, 80, Math.round(duration * 1000));
+    return;
+  }
+  const ctx = getAudioCtx();
+  const vol = state.masterVolume;
+  if (preset === 'bass') {
+    const freq = 440 * Math.pow(2, (midi - 12 - 69) / 12);
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = 'sine'; osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.45 * vol, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + duration + 0.4);
+    osc.start(time); osc.stop(time + duration + 0.5);
+  } else if (preset === 'lead') {
+    const freq = 440 * Math.pow(2, (midi - 69) / 12);
+    const osc = ctx.createOscillator(), filt = ctx.createBiquadFilter(), g = ctx.createGain();
+    osc.connect(filt); filt.connect(g); g.connect(ctx.destination);
+    osc.type = 'sawtooth'; osc.frequency.value = freq;
+    filt.type = 'lowpass'; filt.frequency.value = 1800;
+    g.gain.setValueAtTime(0, time);
+    g.gain.linearRampToValueAtTime(0.22 * vol, time + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, time + duration + 0.12);
+    osc.start(time); osc.stop(time + duration + 0.2);
+  } else if (preset === 'pad') {
+    const freq = 440 * Math.pow(2, (midi - 69) / 12);
+    const master = ctx.createGain(); master.connect(ctx.destination);
+    master.gain.setValueAtTime(0, time);
+    master.gain.linearRampToValueAtTime(0.2 * vol, time + 0.35);
+    master.gain.exponentialRampToValueAtTime(0.001, time + duration + 0.9);
+    [-8, 0, 8].forEach(dt => {
+      const osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.connect(g); g.connect(master);
+      osc.type = 'sine'; osc.frequency.value = freq; osc.detune.value = dt;
+      g.gain.value = 0.33;
+      osc.start(time); osc.stop(time + duration + 1.0);
+    });
+  } else if (preset === 'pluck') {
+    const freq = 440 * Math.pow(2, (midi - 69) / 12);
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = 'triangle'; osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.38 * vol, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.28);
+    osc.start(time); osc.stop(time + 0.35);
+  }
+}
+
+function generateTrackBar(ti, barIdx) {
+  const key   = document.getElementById('key-select').value;
+  const scale = document.getElementById('scale-select').value;
+  const density = parseInt(document.getElementById('density').value);
+  const feel    = parseInt(document.getElementById('feel').value);
+  const notes   = getScaleNotes(key, scale);
+  notes.sort((a, b) => a.midi - b.midi);
+  const nd  = trackState[ti].noteDiv;
+  const bar = new Array(nd).fill(null);
+  const fillProb = density / 10;
+  let lastIdx = Math.floor(notes.length / 2);
+  for (let i = 0; i < nd; i++) {
+    if (Math.random() < fillProb) {
+      const step = feel <= 4 ? Math.floor(Math.random() * 3) - 1
+                : feel <= 7 ? Math.floor(Math.random() * 5) - 2
+                : Math.floor(Math.random() * notes.length) - lastIdx;
+      lastIdx = Math.max(0, Math.min(notes.length - 1, lastIdx + step));
+      bar[i] = notes[lastIdx];
+    }
+  }
+  trackState[ti].bars[barIdx] = bar;
+}
+
+function renderExtraTracks() {
+  const container = document.getElementById('extra-tracks');
+  container.innerHTML = '';
+  const tapEv = ('ontouchstart' in window) ? 'touchend' : 'click';
+
+  EXTRA_TRACKS.forEach((def, ti) => {
+    const ts = trackState[ti];
+    const block = document.createElement('div');
+    block.className = 'track-block';
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'track-header' + (ts.open ? ' open' : '');
+    hdr.innerHTML = `
+      <div><span class="track-arrow">${ts.open ? '▼' : '▶'}</span>${def.name}</div>
+      <div class="track-actions">
+        <button class="track-btn" data-action="gen" data-ti="${ti}">↺ Generate</button>
+        <button class="track-btn" data-action="clr" data-ti="${ti}">✕ Clear</button>
+      </div>`;
+    hdr.addEventListener(tapEv, (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (btn) {
+        e.stopPropagation();
+        const t = parseInt(btn.dataset.ti);
+        if (btn.dataset.action === 'gen') {
+          for (let b = 0; b < 4; b++) generateTrackBar(t, b);
+          renderExtraTracks();
+        } else {
+          trackState[t].bars = Array(4).fill(null).map(() => new Array(trackState[t].noteDiv).fill(null));
+          renderExtraTracks();
+        }
+        return;
+      }
+      ts.open = !ts.open;
+      renderExtraTracks();
+    });
+    block.appendChild(hdr);
+
+    if (ts.open) {
+      const body = document.createElement('div');
+      body.className = 'track-body';
+
+      for (let b = 0; b < 4; b++) {
+        const barWrap = document.createElement('div');
+        barWrap.className = 'bar-wrap';
+        const nd = ts.noteDiv;
+        barWrap.innerHTML = `
+          <div class="bar-header">
+            <div class="bar-title">Bar ${b+1}</div>
+            <div class="bar-actions">
+              <button class="bar-btn" data-ti="${ti}" data-bar="${b}" data-action="regen">↺ Regen</button>
+              <button class="bar-btn" data-ti="${ti}" data-bar="${b}" data-action="clear">✕ Clear</button>
+            </div>
+          </div>
+          <div class="bar-grid" style="grid-template-columns: repeat(${nd}, 1fr)"></div>`;
+
+        barWrap.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener(tapEv, (e) => {
+            e.stopPropagation();
+            const t = parseInt(btn.dataset.ti), bar = parseInt(btn.dataset.bar);
+            if (btn.dataset.action === 'regen') { generateTrackBar(t, bar); renderExtraTracks(); }
+            else { trackState[t].bars[bar] = new Array(trackState[t].noteDiv).fill(null); renderExtraTracks(); }
+          });
+        });
+
+        const grid = barWrap.querySelector('.bar-grid');
+        for (let i = 0; i < nd; i++) {
+          const note = ts.bars[b][i];
+          const cell = document.createElement('div');
+          cell.className = 'cell ' + (note ? 'filled' : 'empty') + (state.editMode ? ' edit-mode' : '');
+          cell.dataset.ti = ti; cell.dataset.bar = b; cell.dataset.cell = i;
+          cell.innerHTML = note ? `<span class="cell-note">${note.name}</span>` : '';
+          cell.addEventListener(tapEv, (e) => {
+            e.preventDefault(); e.stopPropagation();
+            if (_kbNote && document.getElementById('kb-modal').classList.contains('open')) {
+              ts.bars[b][i] = _kbNote; renderExtraTracks(); return;
+            }
+            if (note) { ts.bars[b][i] = null; } else { return; }
+            renderExtraTracks();
+          });
+          grid.appendChild(cell);
+        }
+        body.appendChild(barWrap);
+      }
+      block.appendChild(body);
+    }
+    container.appendChild(block);
+  });
+}
+
 // ─── METRONOME ────────────────────────────────────────────────────────────────
 let _metroEnabled = false;
 let _metroInterval = null;
@@ -2624,6 +2843,7 @@ _initBridge();
 buildKeyScalePanel();
 renderDrums();
 render();
+renderExtraTracks();
 buildKeyboard();
 </script>
 </body>
