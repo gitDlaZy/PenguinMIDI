@@ -1102,21 +1102,21 @@ function _encodeShare() {
     d: drumState.pattern,
     ds: drumState.style,
   };
-  return btoa(encodeURIComponent(JSON.stringify(s)));
+  return encodeURIComponent(JSON.stringify(s));
 }
 
 function _loadFromUrl() {
   const hash = window.location.hash;
   if (!hash.startsWith('#s=')) return false;
   try {
-    const s = JSON.parse(decodeURIComponent(atob(hash.slice(3))));
-    if (s.b)   state.bars       = s.b;
-    if (s.n)   state.noteDiv    = s.n;
-    if (s.bpm) document.getElementById('bpm').value   = s.bpm;
-    if (s.k)   document.getElementById('key-select').value   = s.k;
-    if (s.sc)  document.getElementById('scale-select').value = s.sc;
-    if (s.d)   drumState.pattern = s.d;
-    if (s.ds)  drumState.style   = s.ds;
+    const s = JSON.parse(decodeURIComponent(hash.slice(3)));
+    if (s.b)   state.bars         = s.b;
+    if (s.n)   state.noteDiv      = s.n;
+    if (s.bpm) document.getElementById('bpm').value            = s.bpm;
+    if (s.k)   document.getElementById('key-select').value     = s.k;
+    if (s.sc)  document.getElementById('scale-select').value   = s.sc;
+    if (s.d)   drumState.pattern  = s.d;
+    if (s.ds)  drumState.style    = s.ds;
     document.querySelectorAll('#note-length .pill').forEach(p =>
       p.classList.toggle('active', parseInt(p.dataset.val) === state.noteDiv));
     return true;
