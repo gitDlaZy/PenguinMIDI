@@ -2547,7 +2547,7 @@ function buildKeyboard() {
   let whites = 0;
   let blackQueue = []; // {midi, name, afterWhite}
 
-  for (let oct = 2; oct <= 5; oct++) {
+  for (let oct = 1; oct <= 6; oct++) {
     for (let s = 0; s < 12; s++) {
       const midi = (oct + 1) * 12 + s;
       const name = NAMES[s] + oct;
