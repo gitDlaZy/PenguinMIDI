@@ -2512,16 +2512,15 @@ document.getElementById('drum-save-preset').addEventListener('click', openSavePr
 
 // ─── EXTRA INSTRUMENT TRACKS ──────────────────────────────────────────────────
 const EXTRA_TRACKS = [
-  { name: 'Bass',  preset: 'bass',  channel: 2 },
-  { name: 'Lead',  preset: 'lead',  channel: 3 },
-  { name: 'Pad',   preset: 'pad',   channel: 4 },
-  { name: 'Pluck', preset: 'pluck', channel: 5 },
+  { name: 'Bass',  preset: 'bass',  channel: 2, defaultNoteDiv: 8,  octaves: [1, 2, 3] },
+  { name: 'Lead',  preset: 'lead',  channel: 3, defaultNoteDiv: 16, octaves: [3, 4, 5] },
+  { name: 'Pad',   preset: 'pad',   channel: 4, defaultNoteDiv: 4,  octaves: [3, 4]    },
+  { name: 'Pluck', preset: 'pluck', channel: 5, defaultNoteDiv: 8,  octaves: [3, 4, 5] },
 ];
 
-// Runtime state for each track (bars, open, noteDiv)
-const trackState = EXTRA_TRACKS.map(() => ({
-  bars: Array(4).fill(null).map(() => new Array(16).fill(null)),
-  noteDiv: 16,
+const trackState = EXTRA_TRACKS.map(def => ({
+  bars: Array(4).fill(null).map(() => new Array(def.defaultNoteDiv).fill(null)),
+  noteDiv: def.defaultNoteDiv,
   open: false,
 }));
 
@@ -2575,12 +2574,27 @@ function playTrackNote(preset, midi, time, duration) {
   }
 }
 
+function getScaleNotesForOctaves(key, scale, octaves) {
+  const root = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'].indexOf(key);
+  const intervals = { major:[0,2,4,5,7,9,11], minor:[0,2,3,5,7,8,10], pentatonic:[0,2,4,7,9], blues:[0,3,5,6,7,10], dorian:[0,2,3,5,7,9,10], mixolydian:[0,2,4,5,7,9,10] }[scale] || [0,2,4,5,7,9,11];
+  const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const notes = [];
+  for (const oct of octaves)
+    for (const interval of intervals) {
+      const midi = (oct + 1) * 12 + ((root + interval) % 12);
+      const name = NOTE_NAMES[(root + interval) % 12] + oct;
+      notes.push({ midi, name });
+    }
+  return notes;
+}
+
 function generateTrackBar(ti, barIdx) {
-  const key   = document.getElementById('key-select').value;
-  const scale = document.getElementById('scale-select').value;
+  const def     = EXTRA_TRACKS[ti];
+  const key     = document.getElementById('key-select').value;
+  const scale   = document.getElementById('scale-select').value;
   const density = parseInt(document.getElementById('density').value);
   const feel    = parseInt(document.getElementById('feel').value);
-  const notes   = getScaleNotes(key, scale);
+  const notes   = getScaleNotesForOctaves(key, scale, def.octaves);
   notes.sort((a, b) => a.midi - b.midi);
   const nd  = trackState[ti].noteDiv;
   const bar = new Array(nd).fill(null);
@@ -2639,6 +2653,30 @@ function renderExtraTracks() {
     if (ts.open) {
       const body = document.createElement('div');
       body.className = 'track-body';
+
+      // Note division picker for this track
+      const ndRow = document.createElement('div');
+      ndRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:10px;';
+      ndRow.innerHTML = `<span style="font-size:10px;color:#444;letter-spacing:2px;">DIV</span>`;
+      [4, 8, 16].forEach(val => {
+        const btn = document.createElement('button');
+        btn.className = 'pill' + (ts.noteDiv === val ? ' active' : '');
+        btn.textContent = val === 4 ? '1/4' : val === 8 ? '1/8' : '1/16';
+        btn.dataset.val = val;
+        btn.style.cssText = 'font-size:11px;padding:3px 10px;';
+        btn.addEventListener('click', () => {
+          const old = ts.noteDiv;
+          ts.noteDiv = val;
+          // Resize each bar
+          for (let b = 0; b < 4; b++) {
+            if (val > old) while (ts.bars[b].length < val) ts.bars[b].push(null);
+            else ts.bars[b] = ts.bars[b].slice(0, val);
+          }
+          renderExtraTracks();
+        });
+        ndRow.appendChild(btn);
+      });
+      body.appendChild(ndRow);
 
       for (let b = 0; b < 4; b++) {
         const barWrap = document.createElement('div');
