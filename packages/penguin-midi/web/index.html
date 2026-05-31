@@ -920,7 +920,10 @@
       <button class="btn btn-secondary" id="btn-clear">✕ Clear All</button>
       <button class="btn btn-export" id="btn-export">↓ Export MIDI</button>
     </div>
-    <button class="btn btn-secondary" id="btn-save-pattern">💾 Patterns</button>
+    <div class="actions-row">
+      <button class="btn btn-secondary" id="btn-save-pattern">💾 Patterns</button>
+      <button class="btn btn-secondary" id="btn-save-global" style="background:#1a2a1a;border-color:#22c55e;color:#22c55e;">💾 Save All</button>
+    </div>
   </div>
 
   <!-- PATTERN PANEL -->
@@ -1030,7 +1033,43 @@ async function _initBridge() {
   } else {
     try { _patternCache = JSON.parse(localStorage.getItem('penguinPatterns') || '[]'); }
     catch(e) { _patternCache = []; }
+    _loadSession();
   }
+}
+
+function saveSession() {
+  const session = {
+    bars: state.bars,
+    noteDiv: state.noteDiv,
+    drumPattern: drumState.pattern,
+    drumStyle: drumState.style,
+    drumVolume: drumState.volume,
+    bpm: parseInt(document.getElementById('bpm').value) || 120,
+    key: document.getElementById('key-select').value,
+    scale: document.getElementById('scale-select').value,
+  };
+  if (!window.__JUCE__)
+    localStorage.setItem('penguinSession', JSON.stringify(session));
+  setStatus('Saved ✓', 'active');
+  setTimeout(() => setStatus('Ready', 'idle'), 1500);
+}
+
+function _loadSession() {
+  try {
+    const raw = localStorage.getItem('penguinSession');
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (s.bars)        state.bars = s.bars;
+    if (s.noteDiv)     state.noteDiv = s.noteDiv;
+    if (s.drumPattern) drumState.pattern = s.drumPattern;
+    if (s.drumStyle)   drumState.style = s.drumStyle;
+    if (s.drumVolume)  drumState.volume = s.drumVolume;
+    if (s.bpm)         document.getElementById('bpm').value = s.bpm;
+    if (s.key)         document.getElementById('key-select').value = s.key;
+    if (s.scale)       document.getElementById('scale-select').value = s.scale;
+    document.querySelectorAll('#note-length .pill').forEach(p =>
+      p.classList.toggle('active', parseInt(p.dataset.val) === state.noteDiv));
+  } catch(e) {}
 }
 
 // ─── DRUM PATTERNS ────────────────────────────────────────────────────────────
@@ -1249,6 +1288,7 @@ function renderDrums() {
     clearBtn.addEventListener('click', () => {
       drumState.pattern[key] = new Array(16).fill(0);
       renderDrums();
+      saveSession();
     });
     clearBtn.addEventListener('mouseover', () => { clearBtn.style.color = '#ff6b6b'; clearBtn.style.borderColor = '#ff6b6b'; });
     clearBtn.addEventListener('mouseout',  () => { clearBtn.style.color = '#555';    clearBtn.style.borderColor = '#333'; });
@@ -1265,6 +1305,7 @@ function handleDrumTap(key, step) {
   _drumProcessing = true;
   drumState.pattern[key][step] = drumState.pattern[key][step] ? 0 : 1;
   renderDrums();
+  saveSession();
   setTimeout(() => { _drumProcessing = false; }, 300);
 }
 
@@ -1295,6 +1336,7 @@ function loadDrumStyle(style) {
   document.querySelectorAll('#drum-style-pills .drum-pill').forEach(p => {
     p.classList.toggle('active', p.dataset.style === style);
   });
+  saveSession();
 }
 
 // ─── DRUM SYNTHESIS ───────────────────────────────────────────────────────────
@@ -1761,6 +1803,10 @@ document.addEventListener('click', (e) => {
 // Close on Escape
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeNotePicker();
+  if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    e.preventDefault();
+    togglePlay();
+  }
 });
 function generateBar(barIndex) {
   const key = document.getElementById('key-select').value;
@@ -1806,11 +1852,13 @@ function generateBar(barIndex) {
 function generateAll() {
   for (let b = 0; b < 4; b++) generateBar(b);
   setStatus('All bars generated ✓', 'active');
+  saveSession();
 }
 
 function clearBar(barIndex) {
   state.bars[barIndex] = new Array(state.noteDiv).fill(null);
   render();
+  saveSession();
 }
 
 function clearAll() {
@@ -2194,6 +2242,7 @@ for (let i = 0; i < 80; i++) {
 
 // ─── BUTTON WIRING ────────────────────────────────────────────────────────────
 document.getElementById('btn-generate').addEventListener('click', generateAll);
+document.getElementById('btn-save-global').addEventListener('click', saveSession);
 const _patternTap = ('ontouchstart' in window) ? 'touchend' : 'click';
 document.getElementById('btn-save-pattern').addEventListener(_patternTap, (e) => {
   e.preventDefault();
