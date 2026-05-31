@@ -1241,6 +1241,19 @@ function renderDrums() {
       cells.appendChild(c);
     }
     row.appendChild(cells);
+
+    const clearBtn = document.createElement('button');
+    clearBtn.textContent = '✕';
+    clearBtn.title = `Clear ${label}`;
+    clearBtn.style.cssText = 'margin-left:8px;background:transparent;border:1px solid #333;color:#555;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;flex-shrink:0;';
+    clearBtn.addEventListener('click', () => {
+      drumState.pattern[key] = new Array(16).fill(0);
+      renderDrums();
+    });
+    clearBtn.addEventListener('mouseover', () => { clearBtn.style.color = '#ff6b6b'; clearBtn.style.borderColor = '#ff6b6b'; });
+    clearBtn.addEventListener('mouseout',  () => { clearBtn.style.color = '#555';    clearBtn.style.borderColor = '#333'; });
+    row.appendChild(clearBtn);
+
     container.appendChild(row);
   });
 }
