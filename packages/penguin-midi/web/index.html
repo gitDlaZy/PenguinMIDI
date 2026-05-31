@@ -906,7 +906,13 @@
 
   <!-- ACTION BUTTONS -->
   <div class="actions">
-    <button class="btn btn-play" id="btn-play">▶ Play</button>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button class="btn btn-play" id="btn-play">▶ Play</button>
+      <div class="drum-vol-wrap" style="display:flex;align-items:center;gap:8px;color:#aaa;font-size:12px;letter-spacing:1px;">
+        VOL <input type="range" id="master-vol" min="0" max="100" value="80" style="width:90px;">
+        <span id="master-vol-val" style="color:#aaa;font-size:11px;width:28px;">80%</span>
+      </div>
+    </div>
     <div class="actions-row">
       <button class="btn btn-primary" id="btn-generate">⚡ Generate All</button>
       <button class="btn btn-hum" id="btn-hum">🎤 Hum / Listen</button>
@@ -1288,7 +1294,7 @@ function playDrum(type, time, vol) {
   }
   // Web Audio fallback (standalone browser use only)
   const ctx = getAudioCtx();
-  const v = vol * drumState.volume;
+  const v = vol * drumState.volume * state.masterVolume;
 
   if (type === 'kick') {
     const osc = ctx.createOscillator();
@@ -1423,6 +1429,7 @@ let state = {
   analyser: null,
   micStream: null,
   humBars: [],
+  masterVolume: 0.8,
 };
 
 // ─── KEY SCALE PICKER ─────────────────────────────────────────────────────────
@@ -1835,7 +1842,7 @@ function playNote(midi, time, duration) {
       osc.start(time); osc.stop(time + duration + 1.5);
     });
   });
-  const velocity = 0.28;
+  const velocity = 0.28 * state.masterVolume;
   master.gain.setValueAtTime(0, time);
   master.gain.linearRampToValueAtTime(velocity, time + 0.008);
   master.gain.exponentialRampToValueAtTime(velocity * 0.6, time + 0.08);
@@ -2152,6 +2159,11 @@ document.getElementById('note-length').addEventListener('click', (e) => {
 });
 
 // ─── SLIDERS ──────────────────────────────────────────────────────────────────
+document.getElementById('master-vol').addEventListener('input', (e) => {
+  state.masterVolume = e.target.value / 100;
+  document.getElementById('master-vol-val').textContent = e.target.value + '%';
+});
+
 document.getElementById('density').addEventListener('input', (e) => {
   document.getElementById('density-val').textContent = e.target.value;
 });
