@@ -14,7 +14,7 @@ Establish the Penguin Suite monorepo structure from day one so every future plug
 
 The Windows folder `C:\Users\DlaZy\Documents\music-tools` is renamed to `C:\Users\DlaZy\Documents\PenguinSuite`.
 
-**How:** User does this manually in Windows Explorer (or PowerShell) after all internal changes are committed. Claude Code must be closed before the rename and reopened from the new path.
+**How:** Claude Code runs `mv /mnt/c/Users/DlaZy/Documents/music-tools /mnt/c/Users/DlaZy/Documents/PenguinSuite` as the final step after all internal changes are committed. User then closes Claude Code and reopens from the new path.
 
 There is no git remote, so no remote URLs need updating.
 
