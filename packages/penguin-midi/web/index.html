@@ -225,7 +225,8 @@
   #kb-header .kb-selected { font-size:14px; color:var(--accent); font-weight:bold; min-width:40px; }
   #kb-close { background:transparent; border:1px solid #333; color:#555; border-radius:4px; padding:3px 10px; cursor:pointer; font-size:13px; }
   #kb-close:hover { color:#fff; border-color:#fff; }
-  #kb-keys { display:flex; position:relative; height:110px; overflow-x:auto; overflow-y:hidden; padding-bottom:4px; user-select:none; }
+  #kb-keys { display:flex; justify-content:center; overflow-x:auto; overflow-y:hidden; height:110px; padding-bottom:4px; user-select:none; }
+  #kb-inner { display:flex; position:relative; flex-shrink:0; }
   .kb-white { width:36px; min-width:36px; height:110px; background:#e8e8e0; border:1px solid #999; border-radius:0 0 5px 5px; cursor:pointer; position:relative; flex-shrink:0; transition:background 0.08s; display:flex; align-items:flex-end; justify-content:center; padding-bottom:5px; font-size:9px; color:#888; font-family:'DM Mono',monospace; }
   .kb-white:active, .kb-white.lit { background:var(--accent); color:#000; }
   .kb-black { width:22px; min-width:22px; height:68px; background:#111; border:1px solid #444; border-radius:0 0 4px 4px; cursor:pointer; position:absolute; top:0; z-index:2; transition:background 0.08s; }
@@ -1030,7 +1031,7 @@
       <button id="kb-close" class="kb-tool-btn">✕ Close</button>
     </div>
   </div>
-  <div id="kb-keys"></div>
+  <div id="kb-keys"><div id="kb-inner"></div></div>
   <div id="kb-toolbar">
     <button id="kb-step-btn" class="kb-tool-btn">⏺ Step Rec OFF</button>
     <button id="kb-rest-btn" class="kb-tool-btn">— REST</button>
@@ -2541,7 +2542,7 @@ function _kbPlay(midi, name, el) {
 }
 
 function buildKeyboard() {
-  const wrap = document.getElementById('kb-keys');
+  const wrap = document.getElementById('kb-inner');
   const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
   let whites = 0;
   let blackQueue = []; // {midi, name, afterWhite}
