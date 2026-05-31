@@ -1857,6 +1857,13 @@ function togglePlay() {
   }
 }
 
+function getActiveBars() {
+  // Returns number of bars to loop: last bar containing a note, minimum 1
+  for (let b = 3; b >= 1; b--)
+    if (state.bars[b].some(n => n !== null)) return b + 1;
+  return 1;
+}
+
 function startPlay() {
   state.isPlaying = true;
   state.playPos = 0;
@@ -1865,17 +1872,17 @@ function startPlay() {
 
   const bpm = parseInt(document.getElementById('bpm').value) || 120;
   const noteDiv = state.noteDiv;
-  const stepMs = (60000 / bpm) / (noteDiv / 4);  // piano step duration
-  const drumStepMs = (60000 / bpm) / 4;           // drum step = 1/16 note always
+  const stepMs = (60000 / bpm) / (noteDiv / 4);
+  const drumStepMs = (60000 / bpm) / 4;
 
   const ctx = getAudioCtx();
 
   // ── Piano sequencer ──
   state.playInterval = setInterval(() => {
+    const activeBars = getActiveBars();
+    const totalSteps = activeBars * noteDiv;
     const bar = Math.floor(state.playPos / noteDiv);
     const cell = state.playPos % noteDiv;
-
-    if (bar >= 4) { state.playPos = 0; return; }
 
     document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing-cell'));
     const cellEl = document.querySelector(`[data-bar="${bar}"][data-cell="${cell}"]`);
@@ -1885,7 +1892,7 @@ function startPlay() {
     if (note) playNote(note.midi, ctx.currentTime, stepMs / 1000 * 0.8);
 
     state.playPos++;
-    if (state.playPos >= 4 * noteDiv) state.playPos = 0;
+    if (state.playPos >= totalSteps) state.playPos = 0;
   }, stepMs);
 
   // ── Drum sequencer (independent 16-step clock) ──
