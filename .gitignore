@@ -4,3 +4,12 @@ __pycache__/
 *.env
 .DS_Store
 output/
+
+# Build artifacts
+packages/*/build/
+*.dll
+*.lib
+*.exp
+*.ilk
+*.pdb
+*.vst3
