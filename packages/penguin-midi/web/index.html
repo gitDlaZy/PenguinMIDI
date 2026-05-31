@@ -2111,7 +2111,10 @@ function startPlay() {
     if (cellEl) cellEl.classList.add('playing-cell');
 
     const note = state.bars[bar][cell];
-    if (note) playNote(note.midi, ctx.currentTime, stepMs / 1000 * 0.8);
+    if (note) {
+      playNote(note.midi, ctx.currentTime, stepMs / 1000 * 0.8);
+      kbLit(note.midi, stepMs * 0.75);
+    }
 
     state.playPos++;
     if (state.playPos >= totalSteps) state.playPos = 0;
@@ -2514,6 +2517,13 @@ document.getElementById('btn-metro').addEventListener('click', () => {
     btn.textContent       = '🎵 Metro';
   }
 });
+
+function kbLit(midi, durationMs) {
+  const el = document.querySelector(`[data-midi="${midi}"]`);
+  if (!el) return;
+  el.classList.add('lit');
+  setTimeout(() => el.classList.remove('lit'), durationMs);
+}
 
 // ─── KEYBOARD ─────────────────────────────────────────────────────────────────
 let _kbNote = null;      // currently selected {midi, name}
