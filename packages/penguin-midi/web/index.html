@@ -209,6 +209,31 @@
     flex-wrap: wrap;
   }
 
+  #kb-modal {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #0d0d14;
+    border-top: 2px solid #333;
+    padding: 14px 16px 20px;
+    z-index: 1000;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.7);
+  }
+  #kb-modal.open { display: block; }
+  #kb-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  #kb-header .kb-title { font-size:11px; letter-spacing:3px; color:#666; text-transform:uppercase; }
+  #kb-header .kb-selected { font-size:14px; color:var(--accent); font-weight:bold; min-width:40px; }
+  #kb-close { background:transparent; border:1px solid #333; color:#555; border-radius:4px; padding:3px 10px; cursor:pointer; font-size:13px; }
+  #kb-close:hover { color:#fff; border-color:#fff; }
+  #kb-keys { display:flex; position:relative; height:110px; overflow-x:auto; overflow-y:hidden; padding-bottom:4px; user-select:none; }
+  .kb-white { width:36px; min-width:36px; height:110px; background:#e8e8e0; border:1px solid #999; border-radius:0 0 5px 5px; cursor:pointer; position:relative; flex-shrink:0; transition:background 0.08s; display:flex; align-items:flex-end; justify-content:center; padding-bottom:5px; font-size:9px; color:#888; font-family:'DM Mono',monospace; }
+  .kb-white:active, .kb-white.lit { background:var(--accent); color:#000; }
+  .kb-black { width:22px; min-width:22px; height:68px; background:#111; border:1px solid #444; border-radius:0 0 4px 4px; cursor:pointer; position:absolute; top:0; z-index:2; transition:background 0.08s; }
+  .kb-black:active, .kb-black.lit { background:var(--accent); }
+  #kb-toolbar { display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .kb-tool-btn { background:transparent; border:1px solid #333; color:#555; border-radius:4px; padding:4px 12px; cursor:pointer; font-size:11px; letter-spacing:1px; font-family:'DM Mono',monospace; }
+  .kb-tool-btn.on { border-color:#ff6b6b; color:#ff6b6b; }
+
   .btn {
     padding: 11px 22px;
     border-radius: 8px;
@@ -223,72 +248,6 @@
     gap: 8px;
     text-transform: uppercase;
   }
-
-  /* ── Piano keyboard modal ── */
-  #kb-modal {
-    display: none;
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: #0d0d14;
-    border-top: 2px solid #333;
-    padding: 14px 16px 20px;
-    z-index: 1000;
-    box-shadow: 0 -8px 32px rgba(0,0,0,0.7);
-  }
-  #kb-modal.open { display: block; }
-  #kb-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-  #kb-header .kb-title { font-size: 11px; letter-spacing: 3px; color: #666; text-transform: uppercase; }
-  #kb-header .kb-selected { font-size: 13px; color: var(--accent); font-weight: bold; }
-  #kb-close { background: transparent; border: 1px solid #333; color: #555; border-radius: 4px; padding: 3px 10px; cursor: pointer; font-size: 13px; }
-  #kb-close:hover { color: #fff; border-color: #fff; }
-  #kb-keys {
-    display: flex;
-    position: relative;
-    height: 110px;
-    overflow-x: auto;
-    overflow-y: visible;
-    padding-bottom: 4px;
-  }
-  .kb-white {
-    width: 36px;
-    min-width: 36px;
-    height: 110px;
-    background: #e8e8e0;
-    border: 1px solid #999;
-    border-radius: 0 0 5px 5px;
-    cursor: pointer;
-    position: relative;
-    flex-shrink: 0;
-    transition: background 0.08s;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 5px;
-    font-size: 9px;
-    color: #888;
-    font-family: 'DM Mono', monospace;
-  }
-  .kb-white:hover, .kb-white.active { background: var(--accent); color: #000; }
-  .kb-black {
-    width: 22px;
-    min-width: 22px;
-    height: 68px;
-    background: #111;
-    border: 1px solid #444;
-    border-radius: 0 0 4px 4px;
-    cursor: pointer;
-    position: absolute;
-    top: 0;
-    z-index: 2;
-    transition: background 0.08s;
-  }
-  .kb-black:hover, .kb-black.active { background: var(--accent); }
-  #kb-hint { font-size: 10px; color: #444; margin-top: 10px; letter-spacing: 1px; }
 
   .btn-primary {
     background: var(--accent);
@@ -1062,30 +1021,27 @@
 
 </main>
 
+<!-- ── KEYBOARD MODAL ── -->
+<div id="kb-modal">
+  <div id="kb-header">
+    <span class="kb-title">🎹 Piano — click to hear · click cell to place</span>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span class="kb-selected" id="kb-note-display">—</span>
+      <button id="kb-close" class="kb-tool-btn">✕ Close</button>
+    </div>
+  </div>
+  <div id="kb-keys"></div>
+  <div id="kb-toolbar">
+    <button id="kb-step-btn" class="kb-tool-btn">⏺ Step Rec OFF</button>
+    <button id="kb-rest-btn" class="kb-tool-btn">— REST</button>
+    <span id="kb-pos" style="font-size:10px;color:#444;">Bar 1 · Cell 1</span>
+  </div>
+</div>
+
 <footer>
   <div>🐧 PENGUIN SUITE · MIDI MODULE</div>
   <div>PROTOTYPE · NOT FOR DAW USE YET</div>
 </footer>
-
-<!-- ── KEYBOARD MODAL ── -->
-<div id="kb-modal">
-  <div id="kb-header">
-    <div>
-      <span class="kb-title">🎹 Click a key to audition · then click an empty cell to place it</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:16px;">
-      <span class="kb-selected" id="kb-selected-note">—</span>
-      <button id="kb-close">✕ Close</button>
-    </div>
-  </div>
-  <div id="kb-keys"></div>
-  <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
-    <div id="kb-hint">Touch or click keys to hear · selected note places on next cell click</div>
-    <button id="kb-step-toggle" style="background:transparent;border:1px solid #333;color:#555;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:11px;letter-spacing:1px;font-family:'DM Mono',monospace;">⏺ STEP REC OFF</button>
-    <button id="kb-blank" style="background:transparent;border:1px solid #333;color:#555;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:11px;letter-spacing:1px;font-family:'DM Mono',monospace;" title="Place a rest and advance">— REST</button>
-    <span style="font-size:10px;color:#333;" id="kb-step-pos">Bar 1 · Cell 1</span>
-  </div>
-</div>
 
 <script>
 // ─── JUCE BRIDGE ─────────────────────────────────────────────────────────────
@@ -1858,12 +1814,9 @@ function render() {
       cell.addEventListener(tapEv, (e) => {
         e.preventDefault();
         e.stopPropagation();
-        // If keyboard is open and a note is selected, place it directly
-        if (_kbSelectedNote && document.getElementById('kb-modal').classList.contains('open')) {
-          state.bars[b][i] = _kbSelectedNote;
-          render();
-          saveMidi();
-          return;
+        if (_kbNote && document.getElementById('kb-modal').classList.contains('open')) {
+          state.bars[b][i] = _kbNote;
+          render(); saveMidi(); return;
         }
         openNotePicker(b, i, e.currentTarget);
       });
@@ -2512,145 +2465,6 @@ document.getElementById('drum-regen').addEventListener('click', () => {
 
 document.getElementById('drum-save-preset').addEventListener('click', openSavePresetDialog);
 
-// ─── PIANO KEYBOARD ───────────────────────────────────────────────────────────
-let _kbSelectedNote = null; // { midi, name }
-let _kbStepRec = false;
-let _kbStepBar = 0;
-let _kbStepCell = 0;
-
-function _kbUpdateStepPos() {
-  document.getElementById('kb-step-pos').textContent =
-    `Bar ${_kbStepBar + 1} · Cell ${_kbStepCell + 1}`;
-}
-
-
-function buildKeyboard() {
-  const container = document.getElementById('kb-keys');
-  // C2 to B5: 4 octaves
-  const startOctave = 2, endOctave = 5;
-  // white key pattern within octave: C D E F G A B
-  const whiteOffsets = [0,2,4,5,7,9,11]; // semitones from C
-  // black key pattern: C# D# F# G# A#
-  const blackOffsets = [1,3,6,8,10];
-  // black key positions relative to white key index within octave
-  const blackAfterWhite = { 0:true, 1:true, 3:true, 4:true, 5:true }; // after C,D,F,G,A
-
-  const NOTE_NAMES_KB = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-
-  let whiteKeyCount = 0;
-  let elements = []; // {el, midi, name, isBlack, whiteIndex}
-
-  for (let oct = startOctave; oct <= endOctave; oct++) {
-    let localWhite = 0;
-    for (let semi = 0; semi < 12; semi++) {
-      const midi = (oct + 1) * 12 + semi;
-      const noteName = NOTE_NAMES_KB[semi] + oct;
-      const isBlack = noteName.includes('#');
-
-      if (!isBlack) {
-        const el = document.createElement('div');
-        el.className = 'kb-white';
-        el.textContent = (semi === 0) ? noteName : ''; // label C notes only
-        el.dataset.midi = midi;
-        el.dataset.name = noteName;
-        container.appendChild(el);
-        elements.push({ el, midi, name: noteName, isBlack: false, whiteIndex: whiteKeyCount });
-        whiteKeyCount++;
-        localWhite++;
-      } else {
-        // Black key — will be positioned after previous white key
-        elements.push({ midi, name: noteName, isBlack: true, whiteIndex: whiteKeyCount - 1 });
-      }
-    }
-  }
-
-  // Position black keys absolutely
-  // We need to measure white key width after DOM insert — use RAF
-  requestAnimationFrame(() => {
-    const whites = container.querySelectorAll('.kb-white');
-    if (!whites.length) return;
-    const ww = whites[0].offsetWidth;
-
-    elements.filter(e => e.isBlack).forEach(e => {
-      const el = document.createElement('div');
-      el.className = 'kb-black';
-      el.dataset.midi = e.midi;
-      el.dataset.name = e.name;
-      // Position: after the white key at whiteIndex, offset by 2/3 of white width
-      el.style.left = (e.whiteIndex * ww + ww * 0.65) + 'px';
-      container.appendChild(el);
-
-      el.addEventListener('pointerdown', ev => { ev.stopPropagation(); kbPlayNote(e.midi, e.name, el); });
-    });
-  });
-
-  // Wire white keys
-  container.addEventListener('pointerdown', ev => {
-    const el = ev.target.closest('.kb-white');
-    if (!el) return;
-    kbPlayNote(parseInt(el.dataset.midi), el.dataset.name, el);
-  });
-}
-
-function kbStepAdvance() {
-  const noteDiv = state.noteDiv;
-  _kbStepCell++;
-  if (_kbStepCell >= noteDiv) {
-    _kbStepCell = 0;
-    _kbStepBar++;
-    if (_kbStepBar >= 4) _kbStepBar = 0;
-  }
-  _kbUpdateStepPos();
-}
-
-function kbPlaceNote(note) {
-  // null = blank/rest
-  state.bars[_kbStepBar][_kbStepCell] = note;
-  render();
-  saveMidi();
-  kbStepAdvance();
-}
-
-function kbPlayNote(midi, name, el) {
-  _kbSelectedNote = { midi, name };
-  document.getElementById('kb-selected-note').textContent = name;
-
-  // Flash key
-  el.classList.add('active');
-  setTimeout(() => el.classList.remove('active'), 200);
-
-  // Play sound
-  if (window.__JUCE__) {
-    jucePlayMidi(1, midi, 90, 400);
-  } else {
-    playNote(midi, getAudioCtx().currentTime, 0.4);
-  }
-
-  // Step record
-  if (_kbStepRec) kbPlaceNote({ midi, name });
-}
-
-function toggleKeyboard() {
-  document.getElementById('kb-modal').classList.toggle('open');
-}
-
-document.getElementById('kb-close').addEventListener('click', () => {
-  document.getElementById('kb-modal').classList.remove('open');
-  _kbSelectedNote = null;
-  _kbStepRec = false;
-  document.getElementById('kb-selected-note').textContent = '—';
-  document.getElementById('kb-step-toggle').textContent = '⏺ STEP REC OFF';
-  document.getElementById('kb-step-toggle').style.color = '#555';
-  document.getElementById('kb-step-toggle').style.borderColor = '#333';
-});
-document.getElementById('kb-blank').addEventListener('click', () => {
-  if (_kbStepRec) { kbPlaceNote(null); return; }
-  // If not in step rec, clear selected cell if keyboard note is set
-  _kbSelectedNote = null;
-  document.getElementById('kb-selected-note').textContent = '—';
-});
-document.getElementById('btn-keyboard').addEventListener('click', toggleKeyboard);
-
 // ─── METRONOME ────────────────────────────────────────────────────────────────
 let _metroEnabled = false;
 let _metroInterval = null;
@@ -2700,26 +2514,106 @@ document.getElementById('btn-metro').addEventListener('click', () => {
   }
 });
 
+// ─── KEYBOARD ─────────────────────────────────────────────────────────────────
+let _kbNote = null;      // currently selected {midi, name}
+let _kbStepOn = false;
+let _kbBar = 0;
+let _kbCell = 0;
+
+function _kbPos() {
+  document.getElementById('kb-pos').textContent = `Bar ${_kbBar+1} · Cell ${_kbCell+1}`;
+}
+
+function _kbAdvance() {
+  _kbCell++;
+  if (_kbCell >= state.noteDiv) { _kbCell = 0; _kbBar = (_kbBar + 1) % 4; }
+  _kbPos();
+}
+
+function _kbPlay(midi, name, el) {
+  _kbNote = { midi, name };
+  document.getElementById('kb-note-display').textContent = name;
+  el.classList.add('lit');
+  setTimeout(() => el.classList.remove('lit'), 180);
+  if (window.__JUCE__) jucePlayMidi(1, midi, 90, 400);
+  else playNote(midi, getAudioCtx().currentTime, 0.4);
+  if (_kbStepOn) { state.bars[_kbBar][_kbCell] = { midi, name }; render(); saveMidi(); _kbAdvance(); }
+}
+
+function buildKeyboard() {
+  const wrap = document.getElementById('kb-keys');
+  const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  let whites = 0;
+  let blackQueue = []; // {midi, name, afterWhite}
+
+  for (let oct = 2; oct <= 5; oct++) {
+    for (let s = 0; s < 12; s++) {
+      const midi = (oct + 1) * 12 + s;
+      const name = NAMES[s] + oct;
+      const sharp = name.includes('#');
+      if (!sharp) {
+        const el = document.createElement('div');
+        el.className = 'kb-white';
+        el.textContent = s === 0 ? name : '';
+        el.dataset.midi = midi; el.dataset.name = name;
+        el.addEventListener('pointerdown', e => { e.preventDefault(); _kbPlay(midi, name, el); });
+        wrap.appendChild(el);
+        whites++;
+      } else {
+        blackQueue.push({ midi, name, after: whites - 1 });
+      }
+    }
+  }
+
+  // Position black keys after white keys exist in DOM
+  requestAnimationFrame(() => {
+    const ww = 37; // white key width + border
+    blackQueue.forEach(({ midi, name, after }) => {
+      const el = document.createElement('div');
+      el.className = 'kb-black';
+      el.style.left = (after * ww + ww * 0.63) + 'px';
+      el.dataset.midi = midi; el.dataset.name = name;
+      el.addEventListener('pointerdown', e => { e.preventDefault(); _kbPlay(midi, name, el); });
+      wrap.appendChild(el);
+    });
+  });
+
+  // Toolbar wiring
+  document.getElementById('kb-close').addEventListener('click', () => {
+    document.getElementById('kb-modal').classList.remove('open');
+    _kbNote = null;
+    document.getElementById('kb-note-display').textContent = '—';
+    if (_kbStepOn) {
+      _kbStepOn = false;
+      const btn = document.getElementById('kb-step-btn');
+      btn.textContent = '⏺ Step Rec OFF'; btn.classList.remove('on');
+    }
+  });
+
+  document.getElementById('kb-step-btn').addEventListener('click', () => {
+    _kbStepOn = !_kbStepOn;
+    _kbBar = 0; _kbCell = 0;
+    const btn = document.getElementById('kb-step-btn');
+    btn.textContent = _kbStepOn ? '⏺ Step Rec ON' : '⏺ Step Rec OFF';
+    btn.classList.toggle('on', _kbStepOn);
+    _kbPos();
+  });
+
+  document.getElementById('kb-rest-btn').addEventListener('click', () => {
+    if (_kbStepOn) { state.bars[_kbBar][_kbCell] = null; render(); saveMidi(); _kbAdvance(); }
+  });
+
+  document.getElementById('btn-keyboard').addEventListener('click', () => {
+    document.getElementById('kb-modal').classList.toggle('open');
+  });
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 _initBridge();
 buildKeyScalePanel();
 renderDrums();
 render();
 buildKeyboard();
-
-document.getElementById('kb-step-toggle').addEventListener('click', () => {
-  _kbStepRec = !_kbStepRec;
-  _kbStepBar = 0; _kbStepCell = 0;
-  const btn = document.getElementById('kb-step-toggle');
-  if (_kbStepRec) {
-    btn.textContent = '⏺ STEP REC ON';
-    btn.style.color = '#ff6b6b'; btn.style.borderColor = '#ff6b6b';
-  } else {
-    btn.textContent = '⏺ STEP REC OFF';
-    btn.style.color = '#555'; btn.style.borderColor = '#333';
-  }
-  _kbUpdateStepPos();
-});
 </script>
 </body>
 </html>
