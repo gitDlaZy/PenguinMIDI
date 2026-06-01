@@ -289,7 +289,7 @@
   .track-header .track-actions { display: flex; gap: 8px; }
   .track-btn { background: transparent; border: 1px solid #2a2a38; color: #444; border-radius: 4px; padding: 3px 10px; cursor: pointer; font-size: 10px; letter-spacing: 1px; font-family: 'DM Mono', monospace; }
   .track-btn:hover { border-color: #666; color: #aaa; }
-  .track-body { padding: 12px; background: #0d0d14; }
+  .track-body { padding: 12px 0; background: #0d0d14; }
   .track-bars { }
 
   .btn-play {
@@ -2672,7 +2672,7 @@ function renderExtraTracks() {
 
       // Note division picker for this track
       const ndRow = document.createElement('div');
-      ndRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:10px;';
+      ndRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:0 8px;';
       ndRow.innerHTML = `<span style="font-size:10px;color:#444;letter-spacing:2px;">DIV</span>`;
       const DIV_OPTIONS = [
         { val: 16, label: '1/16' },
