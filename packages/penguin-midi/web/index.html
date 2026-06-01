@@ -1163,6 +1163,7 @@ function saveMidi() {
     bpm: parseInt(document.getElementById('bpm').value) || 120,
     key: document.getElementById('key-select').value,
     scale: document.getElementById('scale-select').value,
+    tracks: trackState.map(t => ({ bars: t.bars, noteDiv: t.noteDiv, muted: t.muted })),
   }));
   setStatus('MIDI saved ✓', 'active');
   setTimeout(() => setStatus('Ready', 'idle'), 1500);
@@ -1206,6 +1207,12 @@ function _loadSession() {
       if (m.scale)   document.getElementById('scale-select').value = m.scale;
       document.querySelectorAll('#note-length .pill').forEach(p =>
         p.classList.toggle('active', parseInt(p.dataset.val) === state.noteDiv));
+      if (m.tracks) m.tracks.forEach((t, ti) => {
+        if (!trackState[ti]) return;
+        if (t.bars)    trackState[ti].bars    = t.bars;
+        if (t.noteDiv) trackState[ti].noteDiv = t.noteDiv;
+        if (t.muted !== undefined) trackState[ti].muted = t.muted;
+      });
     }
   } catch(e) {}
   try {
@@ -2165,7 +2172,7 @@ function startPlay() {
       const bar  = ts.noteDiv === -1 ? (pos * 2) % activeBars : Math.floor(pos / nd) % activeBars;
       const cell = pos % nd;
       const note = ts.bars[bar] && ts.bars[bar][cell];
-      if (note) playTrackNote(def.preset, note.midi, ctx.currentTime, sMs / 1000 * 0.88);
+      if (note && !ts.muted) playTrackNote(def.preset, note.midi, ctx.currentTime, sMs / 1000 * 0.88);
       pos++;
       if (pos >= totalSteps) pos = 0;
     }, sMs);
@@ -2534,6 +2541,7 @@ const trackState = EXTRA_TRACKS.map(def => ({
   bars: Array(4).fill(null).map(() => new Array(def.defaultNoteDiv).fill(null)),
   noteDiv: def.defaultNoteDiv,
   open: false,
+  muted: false,
 }));
 
 function playTrackNote(preset, midi, time, duration) {
@@ -2636,10 +2644,12 @@ function renderExtraTracks() {
 
     // Header
     const hdr = document.createElement('div');
-    hdr.className = 'track-header' + (ts.open ? ' open' : '');
+    hdr.className = 'track-header' + (ts.open ? ' open' : '') + (ts.muted ? ' muted' : '');
+    hdr.style.opacity = ts.muted ? '0.45' : '1';
     hdr.innerHTML = `
       <div><span class="track-arrow">${ts.open ? '▼' : '▶'}</span>${def.name}</div>
       <div class="track-actions">
+        <button class="track-btn" data-action="mute" data-ti="${ti}" style="${ts.muted ? 'border-color:#ff6b6b;color:#ff6b6b;' : ''}">${ts.muted ? '🔇 Muted' : '🔊 On'}</button>
         <button class="track-btn" data-action="gen" data-ti="${ti}">↺ Generate</button>
         <button class="track-btn" data-action="clr" data-ti="${ti}">✕ Clear</button>
       </div>`;
@@ -2648,7 +2658,10 @@ function renderExtraTracks() {
       if (btn) {
         e.stopPropagation();
         const t = parseInt(btn.dataset.ti);
-        if (btn.dataset.action === 'gen') {
+        if (btn.dataset.action === 'mute') {
+          trackState[t].muted = !trackState[t].muted;
+          renderExtraTracks(); saveMidi();
+        } else if (btn.dataset.action === 'gen') {
           const activeBars = getActiveBars();
           for (let b = 0; b < 4; b++) {
             if (b < activeBars) generateTrackBar(t, b);
